@@ -44,25 +44,23 @@ web-build/
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # TypeScript
 *.tsbuildinfo
 
-# IDE
-.vscode/
-.idea/
-
 # Testing
 coverage/
 
-# Production
-build/
-dist/
-
-# Temporary files
+# Editor
+.vscode/
 *.swp
 *.swo
-*~
+
+# Temporary files
+*.log
+*.tmp
+*.temp
 
 # CocoaPods
 /ios/Pods/
