@@ -1,0 +1,96 @@
+{
+    "project": "Stable Stakes",
+    "baseDesign": {
+      "width": 360,
+      "height": 778,
+      "scaleResponsively": true,
+      "note": "All design specs (positions, sizes, spacing) are based on a 360x778 layout. You must scale these values responsively for all other screen sizes using utilities like scaleWidth and scaleHeight."
+    },
+    "directories": {
+      "assets": {
+        "description": "All static assets including images, icons, fonts.",
+        "rules": [
+          "Always check for existing assets before adding new ones.",
+          "Use clear lowercase kebab-case naming (e.g., 'golf-course.png', 'poppins-lightitalic.ttf').",
+          "Place image files in 'assets/images'.",
+          "Place font files in 'assets/fonts'.",
+          "Place icon files in 'assets/icons'."
+        ]
+      },
+      "components": {
+        "description": "Reusable UI components.",
+        "rules": [
+          "Always reuse existing components before creating new ones.",
+          "Component names must be PascalCase.",
+          "Keep components focused on a single responsibility.",
+          "Export components through index.ts for consistent imports.",
+          "Style components using NativeWind where possible."
+        ]
+      },
+      "screens": {
+        "description": "Full-page views linked via navigation.",
+        "rules": [
+          "Each screen must live in its own folder under /src/screens.",
+          "Use the shared layout pattern with BackgroundLayout and optional scroll container.",
+          "Avoid duplicating layout or style logic already handled in components.",
+          "Screens must not contain reusable components — extract those to /components."
+        ]
+      },
+      "utils": {
+        "description": "Shared utility functions (e.g., scaling, formatting).",
+        "rules": [
+          "Use scale.ts for all pixel-based positioning or sizing.",
+          "Avoid writing inline scaling logic inside components.",
+          "Utilities must be pure functions with reusable logic only."
+        ]
+      },
+      "navigation": {
+        "description": "React Navigation configuration.",
+        "rules": [
+          "Define stack and tab navigators only in this folder.",
+          "Screens must not include their own navigation logic.",
+          "Update RootStackParamList as needed in a single source of truth."
+        ]
+      },
+      "theme": {
+        "description": "Tailwind and styling config.",
+        "rules": [
+          "Only modify tailwind.config.js with approved design tokens (e.g., colours, fonts).",
+          "Use Tailwind utility classes via NativeWind wherever possible.",
+          "Avoid inline styles unless absolutely required for logic-based rendering."
+        ]
+      },
+      "state": {
+        "description": "Global state management setup.",
+        "rules": [
+          "Use Zustand or context-based stores here.",
+          "Do not store persistent UI state in components unless localised."
+        ]
+      }
+    },
+    "generalRules": [
+      "All position and size references (x/y coordinates, px values) are based on a 360x778 design. Always scale them responsively using scaleWidth and scaleHeight.",
+      "Stick strictly to the visual spec — do not modify sizes, spacing, or placement unless explicitly approved.",
+      "Always check all existing directories before creating new files or components.",
+      "Avoid creating duplicate components. Consolidate existing ones instead.",
+      "Use shared reusable components for buttons, inputs, layouts, and indicators.",
+      "Use only preloaded Poppins font variants from 'assets/fonts' — do not hardcode system fonts.",
+      "Style using NativeWind utility classes. Avoid inline styles unless needed for conditional rendering.",
+      "Component files must use PascalCase naming (e.g., PrimaryButton.tsx). Asset files must use kebab-case (e.g., golf-course.png).",
+      "Only place images in assets/images, icons in assets/icons, and fonts in assets/fonts.",
+      "All user-facing components must support responsive layout and basic accessibility tags (where appropriate).",
+      "Animations must match spec timing and sequence. Do not introduce new transitions or gestures unless agreed.",
+      "Use the shared background layout and scrollable container unless the screen is marked as full-bleed (e.g., loading).",
+      "Do not nest folders unnecessarily — always merge or refactor when redundant directories are detected."
+    ],
+    "maintenance": {
+      "rules": [
+        "Review the project directory before starting new work to prevent duplication.",
+        "Delete any outdated, unused, or redundant files once their content has been migrated.",
+        "Consolidate multiple similar components into a single reusable version where possible.",
+        "Ensure every screen and component has a clear, consistent purpose and is placed in the correct directory.",
+        "Run cleanup before each commit to ensure a tidy structure."
+      ]
+    }
+  }
+  

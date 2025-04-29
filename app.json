@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Stable Stakes",
+    "slug": "stable-stakes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E1E1E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "fonts": {
+      "Poppins-LightItalic": "./assets/fonts/Poppins-LightItalic.ttf",
+      "Poppins-ExtraBoldItalic": "./assets/fonts/Poppins-ExtraBoldItalic.ttf",
+      "Poppins": "./assets/fonts/Poppins-Regular.ttf"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "newArchEnabled": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#1E1E1E"
+      },
+      "newArchEnabled": true
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "newArchEnabled": true
+  }
+} 
