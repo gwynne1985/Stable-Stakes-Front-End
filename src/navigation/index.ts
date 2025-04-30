@@ -3,6 +3,4 @@ export type RootStackParamList = {
   Login: undefined;
   Games: undefined;
   Registration: undefined;
-};
-
-export type { RootStackParamList }; 
+}; 

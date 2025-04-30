@@ -51,8 +51,8 @@ export const SlidingPanel: React.FC<Props> = ({
   const [chdId, setChdId] = useState('');
   
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const panY = useRef(new Animated.Value(0)).current;
   const slideX = useRef(new Animated.Value(0)).current;
+  const panY = useRef(new Animated.Value(0)).current as Animated.Value;
   const backButtonOpacity = useRef(new Animated.Value(0)).current;
 
   const panResponder = useRef(
@@ -62,7 +62,7 @@ export const SlidingPanel: React.FC<Props> = ({
         return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
       },
       onPanResponderGrant: () => {
-        panY.setOffset(panY._value);
+        panY.extractOffset();
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
