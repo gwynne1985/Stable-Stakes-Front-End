@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export const GamesScreen = () => {
+export const MyGamesScreen = () => {
   return (
     <View style={styles.container}>
-      <Text>Games Screen</Text>
+      <Text>My Games Screen</Text>
     </View>
   );
 };
