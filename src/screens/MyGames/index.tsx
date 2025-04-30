@@ -1,11 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { PageContainer } from '../../components/PageContainer';
 
 export const MyGamesScreen = () => {
   return (
-    <View style={styles.container}>
-      <Text>My Games Screen</Text>
-    </View>
+    <PageContainer title="Your Games" variant="light" notificationCount={2}>
+      <View style={styles.container}>
+        <Text>My Games Content</Text>
+      </View>
+    </PageContainer>
   );
 };
 

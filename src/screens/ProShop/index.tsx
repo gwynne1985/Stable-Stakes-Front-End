@@ -1,11 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { PageContainer } from '../../components/PageContainer';
 
 export const ProShopScreen = () => {
   return (
-    <View style={styles.container}>
-      <Text>Pro Shop Screen</Text>
-    </View>
+    <PageContainer title="Pro Shop" notificationCount={2}>
+      <View style={styles.container}>
+        <Text>Pro Shop Content</Text>
+      </View>
+    </PageContainer>
   );
 };
 

@@ -3,11 +3,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoadingScreen } from './src/screens/Loading';
 import { LoginScreen } from './src/screens/Login';
-import { GamesScreen } from './src/screens/Games';
 import { RegistrationScreen } from './src/screens/Registration';
 import { loadFonts } from './src/utils/loadFonts';
 import { View, ImageBackground, StyleSheet } from 'react-native';
 import { RootStackParamList } from './src/navigation';
+import { TabNavigator } from './src/navigation/TabNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -66,8 +66,8 @@ export default function App() {
               }}
             />
             <Stack.Screen 
-              name="Games" 
-              component={GamesScreen}
+              name="MainApp" 
+              component={TabNavigator}
               options={{
                 contentStyle: {
                   backgroundColor: 'transparent',

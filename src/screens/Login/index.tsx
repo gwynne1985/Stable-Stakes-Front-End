@@ -119,7 +119,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     ]).start(() => {
       // Hold for a moment before navigating
       setTimeout(() => {
-        navigation.replace('Games');
+        navigation.replace('MainApp');
       }, 500);
     });
   };

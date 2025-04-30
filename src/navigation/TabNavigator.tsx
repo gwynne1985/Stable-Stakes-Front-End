@@ -1,125 +1,107 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { scaleWidth, scaleHeight } from '../utils/scale';
+import { useNavigation } from '@react-navigation/native';
+import { TabParamList } from './index';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { GamesScreen } from '../screens/Games';
 import { WalletScreen } from '../screens/Wallet';
 import { MyGamesScreen } from '../screens/MyGames';
 import { ProShopScreen } from '../screens/ProShop';
-import { TabParamList } from './index';
+import { Image, StyleSheet, Text } from 'react-native';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export const TabNavigator = () => {
+  const navigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false,
+        tabBarStyle: {
+          height: 85,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 0,
+          paddingHorizontal: '4%',
+        },
+        tabBarItemStyle: {
+          paddingTop: 18,
+          paddingHorizontal: 0,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Poppins-SemiBold',
+          fontSize: 10,
+          marginTop: 14,
+        },
+        tabBarActiveTintColor: '#18302A',
+        tabBarInactiveTintColor: '#768783',
       }}
     >
-      <Tab.Screen
-        name="Games"
-        component={GamesScreen}
+      <Tab.Screen 
+        name="GamesScreen" 
+        component={GamesScreen} 
         options={{
+          title: 'Games',
           tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Image
-                source={
-                  focused
-                    ? require('../../assets/icons/navigation/games-active.png')
-                    : require('../../assets/icons/navigation/games.png')
-                }
-                style={[styles.tabIcon, styles.gamesIcon]}
-                resizeMode="contain"
-              />
-              <Text style={[
-                styles.tabLabel,
-                focused ? styles.activeLabel : styles.inactiveLabel,
-                styles.gamesLabel
-              ]}>
-                Games
-              </Text>
-            </View>
+            <Image
+              source={focused 
+                ? require('../../assets/icons/navigation/flag-navactive.png')
+                : require('../../assets/icons/navigation/flag-nav.png')
+              }
+              style={styles.gameIcon}
+              resizeMode="contain"
+            />
           ),
         }}
       />
-      <Tab.Screen
-        name="Wallet"
-        component={WalletScreen}
+      <Tab.Screen 
+        name="WalletScreen" 
+        component={WalletScreen} 
         options={{
+          title: 'Wallet',
           tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Image
-                source={
-                  focused
-                    ? require('../../assets/icons/navigation/wallet-active.png')
-                    : require('../../assets/icons/navigation/wallet.png')
-                }
-                style={[styles.tabIcon, styles.walletIcon]}
-                resizeMode="contain"
-              />
-              <Text style={[
-                styles.tabLabel,
-                focused ? styles.activeLabel : styles.inactiveLabel,
-                styles.walletLabel
-              ]}>
-                Wallet
-              </Text>
-            </View>
+            <Image
+              source={focused 
+                ? require('../../assets/icons/navigation/wallet-navactive.png')
+                : require('../../assets/icons/navigation/wallet-nav.png')
+              }
+              style={styles.walletIcon}
+              resizeMode="contain"
+            />
           ),
         }}
       />
-      <Tab.Screen
-        name="MyGames"
-        component={MyGamesScreen}
+      <Tab.Screen 
+        name="MyGamesScreen" 
+        component={MyGamesScreen} 
         options={{
+          title: 'Your Games',
           tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Image
-                source={
-                  focused
-                    ? require('../../assets/icons/navigation/mygames-active.png')
-                    : require('../../assets/icons/navigation/mygames.png')
-                }
-                style={[styles.tabIcon, styles.myGamesIcon]}
-                resizeMode="contain"
-              />
-              <Text style={[
-                styles.tabLabel,
-                focused ? styles.activeLabel : styles.inactiveLabel,
-                styles.myGamesLabel
-              ]}>
-                My Games
-              </Text>
-            </View>
+            <Image
+              source={focused 
+                ? require('../../assets/icons/navigation/yourgames-navactive.png')
+                : require('../../assets/icons/navigation/yourgames-nav.png')
+              }
+              style={styles.myGamesIcon}
+              resizeMode="contain"
+            />
           ),
         }}
       />
-      <Tab.Screen
-        name="ProShop"
-        component={ProShopScreen}
+      <Tab.Screen 
+        name="ProShopScreen" 
+        component={ProShopScreen} 
         options={{
+          title: 'Pro Shop',
           tabBarIcon: ({ focused }) => (
-            <View style={styles.tabItem}>
-              <Image
-                source={
-                  focused
-                    ? require('../../assets/icons/navigation/proshop-active.png')
-                    : require('../../assets/icons/navigation/proshop.png')
-                }
-                style={[styles.tabIcon, styles.proShopIcon]}
-                resizeMode="contain"
-              />
-              <Text style={[
-                styles.tabLabel,
-                focused ? styles.activeLabel : styles.inactiveLabel,
-                styles.proShopLabel
-              ]}>
-                Pro Shop
-              </Text>
-            </View>
+            <Image
+              source={focused 
+                ? require('../../assets/icons/navigation/proshop-navactive.png')
+                : require('../../assets/icons/navigation/proshop-nav.png')
+              }
+              style={styles.proShopIcon}
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -128,74 +110,33 @@ export const TabNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    width: scaleWidth(360),
-    height: scaleHeight(74),
-    backgroundColor: '#FFFFFF',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 20,
-      },
-    }),
+  headerTitle: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: 20,
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: 24,
+    letterSpacing: -0.2,
+    textTransform: 'uppercase',
+    paddingTop: 50,
+    paddingBottom: 20,
   },
-  tabItem: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  tabIcon: {
-    resizeMode: 'contain',
-  },
-  gamesIcon: {
-    width: scaleWidth(34),
-    height: scaleHeight(29),
-    marginTop: scaleHeight(9),
+  gameIcon: {
+    width: 34,
+    height: 29,
   },
   walletIcon: {
-    width: scaleWidth(28),
-    height: scaleHeight(24),
-    marginTop: scaleHeight(12),
+    width: 28,
+    height: 24,
   },
   myGamesIcon: {
-    width: scaleWidth(26),
-    height: scaleHeight(24),
-    marginTop: scaleHeight(12),
+    width: 26,
+    height: 24,
   },
   proShopIcon: {
-    width: scaleWidth(28),
-    height: scaleHeight(25),
-    marginTop: scaleHeight(11),
-  },
-  tabLabel: {
-    fontFamily: 'Poppins-SemiBold',
-    fontSize: scaleWidth(10),
-    marginTop: scaleHeight(2),
-  },
-  activeLabel: {
-    color: '#18302A',
-  },
-  inactiveLabel: {
-    color: '#768783',
-  },
-  gamesLabel: {
-    marginLeft: scaleWidth(44),
-  },
-  walletLabel: {
-    marginLeft: scaleWidth(110),
-  },
-  myGamesLabel: {
-    marginLeft: scaleWidth(190),
-  },
-  proShopLabel: {
-    marginLeft: scaleWidth(270),
+    width: 28,
+    height: 25,
   },
 }); 
