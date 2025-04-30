@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { PrimaryButton } from '../PrimaryButton';
 
 interface VerificationStepProps {
   code: string;
@@ -19,6 +19,10 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
   onCodeChange,
   onNext,
 }) => {
+  const isValidCode = useMemo(() => {
+    return code.length === 5 && /^\d+$/.test(code);
+  }, [code]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>ENTER CODE</Text>
@@ -34,9 +38,12 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
         keyboardType="number-pad"
         maxLength={5}
       />
-      <TouchableOpacity style={styles.nextButton} onPress={onNext}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Next"
+        onPress={onNext}
+        isActive={isValidCode}
+        style={styles.nextButton}
+      />
     </View>
   );
 };
@@ -76,16 +83,6 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   nextButton: {
-    height: scaleHeight(48),
-    backgroundColor: '#18302A',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
-    color: '#FFFFFF',
-    fontWeight: '600',
+    alignSelf: 'center',
   },
 }); 

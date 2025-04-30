@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { PrimaryButton } from '../PrimaryButton';
 
 interface GolfClubStepProps {
   onNext: () => void;
@@ -21,9 +21,12 @@ export const GolfClubStep: React.FC<GolfClubStepProps> = ({
         Select your home golf club from the list. This will be used to verify your handicap.
       </Text>
       {/* Golf club selector will be added later */}
-      <TouchableOpacity style={styles.nextButton} onPress={onNext}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Next"
+        onPress={onNext}
+        isActive={false} // Will be updated when club selector is implemented
+        style={styles.nextButton}
+      />
     </View>
   );
 };
@@ -53,16 +56,6 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     marginTop: scaleHeight(130),
-    height: scaleHeight(48),
-    backgroundColor: '#18302A',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
-    color: '#FFFFFF',
-    fontWeight: '600',
+    alignSelf: 'center',
   },
 }); 

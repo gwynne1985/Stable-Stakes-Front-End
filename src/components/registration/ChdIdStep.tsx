@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { PrimaryButton } from '../PrimaryButton';
 
 interface ChdIdStepProps {
   chdId: string;
@@ -19,6 +19,10 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
   onChdIdChange,
   onNext,
 }) => {
+  const isValidChdId = useMemo(() => {
+    return chdId.trim().length > 0;
+  }, [chdId]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>YOUR CHD ID</Text>
@@ -33,9 +37,12 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
         placeholderTextColor="#18302A80"
         autoCapitalize="characters"
       />
-      <TouchableOpacity style={styles.nextButton} onPress={onNext}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Next"
+        onPress={onNext}
+        isActive={isValidChdId}
+        style={styles.nextButton}
+      />
     </View>
   );
 };
@@ -75,16 +82,6 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   nextButton: {
-    height: scaleHeight(48),
-    backgroundColor: '#18302A',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
-    color: '#FFFFFF',
-    fontWeight: '600',
+    alignSelf: 'center',
   },
 }); 
