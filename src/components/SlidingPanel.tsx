@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,19 +9,29 @@ import {
   Dimensions,
   Platform,
   PanResponder,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
+import { EmailStep } from './registration/EmailStep';
+import { VerificationStep } from './registration/VerificationStep';
+import { PasswordStep } from './registration/PasswordStep';
+import { NameStep } from './registration/NameStep';
+import { DobStep } from './registration/DobStep';
+import { GolfClubStep } from './registration/GolfClubStep';
+import { ChdIdStep } from './registration/ChdIdStep';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const PANEL_HEIGHT = scaleHeight(737);
 const TOP_GAP = scaleHeight(50);
-const SWIPE_THRESHOLD = 50; // How many pixels to swipe before dismissing
+const SWIPE_THRESHOLD = 50;
+const totalSteps = 7;
 
 interface Props {
   isVisible: boolean;
   title: string;
   onClose: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   currentStep?: number;
   totalSteps?: number;
 }
@@ -30,25 +40,31 @@ export const SlidingPanel: React.FC<Props> = ({
   isVisible,
   title,
   onClose,
-  children,
-  currentStep = 1,
-  totalSteps = 5,
 }) => {
+  const [step, setStep] = useState(1);
+  const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [dob, setDob] = useState<Date | null>(null);
+  const [golfClub, setGolfClub] = useState('');
+  const [chdId, setChdId] = useState('');
+  
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const panY = useRef(new Animated.Value(0)).current;
+  const slideX = useRef(new Animated.Value(0)).current;
+  const backButtonOpacity = useRef(new Animated.Value(0)).current;
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to vertical gestures
         return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
       },
       onPanResponderGrant: () => {
         panY.setOffset(panY._value);
       },
       onPanResponderMove: (_, gestureState) => {
-        // Only allow downward swipes
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
         }
@@ -56,10 +72,8 @@ export const SlidingPanel: React.FC<Props> = ({
       onPanResponderRelease: (_, gestureState) => {
         panY.flattenOffset();
         if (gestureState.dy > SWIPE_THRESHOLD) {
-          // User swiped down far enough, dismiss the panel
           onClose();
         } else {
-          // Reset to original position
           Animated.spring(panY, {
             toValue: 0,
             useNativeDriver: true,
@@ -72,34 +86,67 @@ export const SlidingPanel: React.FC<Props> = ({
   ).current;
 
   useEffect(() => {
-    console.log('SlidingPanel mounted, isVisible:', isVisible);
     if (isVisible) {
-      console.log('Starting slide up animation');
       Animated.spring(slideAnim, {
         toValue: TOP_GAP,
         useNativeDriver: true,
         damping: 20,
         stiffness: 90,
-      }).start(() => console.log('Slide up animation completed'));
+      }).start();
     } else {
-      console.log('Starting slide down animation');
       Animated.timing(slideAnim, {
         toValue: SCREEN_HEIGHT,
         duration: 300,
         useNativeDriver: true,
-      }).start(() => console.log('Slide down animation completed'));
+      }).start();
     }
   }, [isVisible]);
+
+  const handleNext = () => {
+    Animated.parallel([
+      Animated.timing(slideX, {
+        toValue: -SCREEN_WIDTH,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backButtonOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setStep(prev => prev + 1);
+      slideX.setValue(0);
+    });
+  };
+
+  const handleBack = () => {
+    Animated.parallel([
+      Animated.timing(slideX, {
+        toValue: SCREEN_WIDTH,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backButtonOpacity, {
+        toValue: step <= 2 ? 0 : 1,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setStep(prev => prev - 1);
+      slideX.setValue(0);
+    });
+  };
 
   const renderProgressIndicators = () => {
     return (
       <View style={styles.progressContainer}>
-        {[0,1,2,3,4].map((index) => (
+        {[...Array(totalSteps)].map((_, index) => (
           <View
             key={index}
             style={[
               styles.progressIndicator,
-              index + 1 === currentStep ? styles.currentStep : styles.otherStep,
+              index + 1 === step ? styles.currentStep : styles.otherStep,
             ]}
           />
         ))}
@@ -107,34 +154,100 @@ export const SlidingPanel: React.FC<Props> = ({
     );
   };
 
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            transform: [
-              { translateY: slideAnim },
-              { translateY: panY },
-            ],
-          },
-        ]}
-        {...panResponder.panHandlers}
-      >
-        <View style={styles.dragIndicator} />
-        <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Image
-              source={require('../../assets/icons/navigation/close.png')}
-              style={styles.closeIcon}
-            />
-          </TouchableOpacity>
-        </View>
-        {renderProgressIndicators()}
-        <View style={styles.content}>{children}</View>
+  const renderContent = () => {
+    return (
+      <Animated.View style={[styles.contentContainer, { transform: [{ translateX: slideX }] }]}>
+        {step === 1 && (
+          <EmailStep
+            email={email}
+            onEmailChange={setEmail}
+            onNext={handleNext}
+          />
+        )}
+        {step === 2 && (
+          <VerificationStep
+            code={verificationCode}
+            onCodeChange={setVerificationCode}
+            onNext={handleNext}
+          />
+        )}
+        {step === 3 && (
+          <PasswordStep
+            password={password}
+            onPasswordChange={setPassword}
+            onNext={handleNext}
+          />
+        )}
+        {step === 4 && (
+          <NameStep
+            name={name}
+            onNameChange={setName}
+            onNext={handleNext}
+          />
+        )}
+        {step === 5 && (
+          <DobStep
+            onNext={handleNext}
+          />
+        )}
+        {step === 6 && (
+          <GolfClubStep
+            onNext={handleNext}
+          />
+        )}
+        {step === 7 && (
+          <ChdIdStep
+            chdId={chdId}
+            onChdIdChange={setChdId}
+            onNext={handleNext}
+          />
+        )}
       </Animated.View>
-    </View>
+    );
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={StyleSheet.absoluteFill}>
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              transform: [
+                { translateY: slideAnim },
+                { translateY: panY },
+              ],
+            },
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <View style={styles.dragIndicator} />
+          <View style={styles.header}>
+            <Animated.View style={[styles.backButton, { opacity: backButtonOpacity }]}>
+              {step > 1 && (
+                <TouchableOpacity onPress={handleBack}>
+                  <Image
+                    source={require('../../assets/icons/navigation/back.png')}
+                    style={styles.backIcon}
+                  />
+                </TouchableOpacity>
+              )}
+            </Animated.View>
+            <Text style={styles.title}>{title}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Image
+                source={require('../../assets/icons/navigation/close.png')}
+                style={styles.closeIcon}
+              />
+            </TouchableOpacity>
+          </View>
+          {renderProgressIndicators()}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            {renderContent()}
+          </TouchableWithoutFeedback>
+        </Animated.View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -164,6 +277,10 @@ const styles = StyleSheet.create({
         elevation: 5,
       },
     }),
+  },
+  contentContainer: {
+    flex: 1,
+    width: '100%',
   },
   dragIndicator: {
     width: 36,
@@ -228,10 +345,18 @@ const styles = StyleSheet.create({
     width: 5.364,
     backgroundColor: '#18302A',
   },
-  content: {
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: scaleWidth(20),
-    paddingBottom: scaleHeight(30),
+  backButton: {
+    position: 'absolute',
+    top: scaleHeight(20),
+    left: scaleWidth(25),
+    width: scaleWidth(29),
+    height: scaleWidth(29),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    width: scaleWidth(29),
+    height: scaleWidth(29),
+    resizeMode: 'contain',
   },
 }); 
