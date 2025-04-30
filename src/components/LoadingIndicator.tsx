@@ -140,39 +140,36 @@ export const LoadingIndicator: React.FC<Props> = ({ onAnimationComplete }) => {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: scaleWidth(300),
+    height: scaleHeight(200),
   },
   ball: {
     position: 'absolute',
-    left: scaleWidth(192),
-    top: scaleHeight(690),
     width: scaleWidth(24),
-    height: scaleWidth(24), // Using width to maintain aspect ratio
+    height: scaleWidth(24),
+    bottom: scaleHeight(60),
   },
   topLine: {
     position: 'absolute',
-    left: scaleWidth(174),
-    top: scaleHeight(721),
     width: scaleWidth(12),
     height: scaleHeight(2),
     backgroundColor: '#FFFFFF',
+    bottom: scaleHeight(30),
   },
   middleLine: {
     position: 'absolute',
-    left: scaleWidth(176),
-    top: scaleHeight(728),
     width: scaleWidth(8),
     height: scaleHeight(2),
     backgroundColor: '#FFFFFF',
+    bottom: scaleHeight(20),
   },
   bottomLine: {
     position: 'absolute',
-    left: scaleWidth(178),
-    top: scaleHeight(735),
     width: scaleWidth(4),
     height: scaleHeight(2),
     backgroundColor: '#FFFFFF',
+    bottom: scaleHeight(10),
   },
 }); 

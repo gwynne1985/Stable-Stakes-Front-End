@@ -24,7 +24,8 @@
           "Component names must be PascalCase.",
           "Keep components focused on a single responsibility.",
           "Export components through index.ts for consistent imports.",
-          "Style components using NativeWind where possible."
+          "Style components using NativeWind where possible.",
+          "ALL dimensions (width, height, margins, paddings, font sizes, etc.) MUST use scaleWidth/scaleHeight from utils/scale.ts - no raw pixel values allowed"
         ]
       },
       "screens": {
@@ -33,7 +34,8 @@
           "Each screen must live in its own folder under /src/screens.",
           "Use the shared layout pattern with BackgroundLayout and optional scroll container.",
           "Avoid duplicating layout or style logic already handled in components.",
-          "Screens must not contain reusable components — extract those to /components."
+          "Screens must not contain reusable components — extract those to /components.",
+          "ALL dimensions (width, height, margins, paddings, font sizes, etc.) MUST use scaleWidth/scaleHeight from utils/scale.ts - no raw pixel values allowed"
         ]
       },
       "utils": {
@@ -69,6 +71,7 @@
       }
     },
     "generalRules": [
+      "NEVER use raw pixel values - ALL dimensions must be scaled using scaleWidth/scaleHeight from utils/scale.ts",
       "All position and size references (x/y coordinates, px values) are based on a 360x778 design. Always scale them responsively using scaleWidth and scaleHeight.",
       "Stick strictly to the visual spec — do not modify sizes, spacing, or placement unless explicitly approved.",
       "Always check all existing directories before creating new files or components.",

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { View, StyleSheet, Image, Animated, ImageBackground } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -11,7 +11,7 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
   const logoPosition = useRef(new Animated.Value(scaleHeight(274))).current;
 
   const handleLoadingComplete = () => {
-    // Animate logo to new position
+    // Move logo to new position
     Animated.timing(logoPosition, {
       toValue: scaleHeight(131),
       duration: 500,
@@ -33,11 +33,7 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
           style={[
             styles.logoContainer,
             {
-              transform: [
-                {
-                  translateY: logoPosition,
-                },
-              ],
+              transform: [{ translateY: logoPosition }],
             },
           ]}
         >
@@ -47,7 +43,9 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
             resizeMode="contain"
           />
         </Animated.View>
-        <LoadingIndicator onAnimationComplete={handleLoadingComplete} />
+        <View style={styles.loadingContainer}>
+          <LoadingIndicator onAnimationComplete={handleLoadingComplete} />
+        </View>
       </View>
     </ImageBackground>
   );
@@ -56,8 +54,6 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    width: '100%',
-    height: '100%',
   },
   container: {
     flex: 1,
@@ -67,9 +63,16 @@ const styles = StyleSheet.create({
     left: scaleWidth(32),
     width: scaleWidth(279),
     height: scaleHeight(177),
+    zIndex: 2,
   },
   logo: {
     width: '100%',
     height: '100%',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: scaleHeight(100),
   },
 }); 

@@ -99,8 +99,14 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleRegister = () => {
-    // TODO: Implement registration navigation
+    console.log('Register button pressed - attempting navigation');
     Keyboard.dismiss();
+    try {
+      navigation.navigate('Registration');
+      console.log('Navigation to Registration completed');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+    }
   };
 
   const isFormFilled = email.length > 0 && password.length > 0;
