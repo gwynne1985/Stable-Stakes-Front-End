@@ -13,6 +13,8 @@ import {
   BackHandler,
   TouchableOpacity,
   Animated,
+  ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
@@ -28,9 +30,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   // Animation values
-  const contentOpacity = useRef(new Animated.Value(1)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
   const logoPosition = useRef(new Animated.Value(scaleHeight(131))).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
+
+  // Fade in content smoothly after mount
+  useEffect(() => {
+    Animated.timing(contentOpacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   // Handle Android back button to dismiss keyboard
   useEffect(() => {
@@ -47,6 +58,29 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
+  // Handle autofill by watching for quick changes in input values
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const handlePossibleAutofill = () => {
+      // Clear any existing timeout
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      // Set a new timeout to check if both fields are filled
+      timeoutId = setTimeout(() => {
+        if (email && password) {
+          Keyboard.dismiss();
+        }
+      }, 100);
+    };
+
+    handlePossibleAutofill();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [email, password]);
+
   const handleSignIn = () => {
     if (!email || !password) {
       setShowError(true);
@@ -56,30 +90,37 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setIsSigningIn(true);
     Keyboard.dismiss();
 
-    // Animate content out and move logo
+    // Start showing tagline while content fades out
     Animated.parallel([
+      // Fade out content
       Animated.timing(contentOpacity, {
         toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoPosition, {
-        toValue: scaleHeight(274),
         duration: 500,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      // Show tagline
+      // Start showing tagline earlier
       Animated.sequence([
+        Animated.delay(200), // Small delay before tagline starts
         Animated.timing(taglineOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 800,
           useNativeDriver: true,
         }),
-        Animated.delay(500),
-      ]).start(() => {
+      ]),
+      // Move logo last and slower
+      Animated.sequence([
+        Animated.delay(300), // Delay before logo moves
+        Animated.timing(logoPosition, {
+          toValue: scaleHeight(274),
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      // Hold for a moment before navigating
+      setTimeout(() => {
         navigation.replace('Games');
-      });
+      }, 500);
     });
   };
 
@@ -118,82 +159,91 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.background}
         resizeMode="cover"
       >
-        <View style={styles.container}>
-          <Animated.View
-            style={[
-              styles.logoContainer,
-              {
-                transform: [{ translateY: logoPosition }],
-              },
-            ]}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.container}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <Image
-              source={require('../../../assets/images/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </Animated.View>
-
-          <Animated.View style={{ opacity: contentOpacity }}>
-            <InputField
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles.emailInput}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-            />
-
-            <InputField
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              style={styles.passwordInput}
-              secureTextEntry
-              returnKeyType="done"
-              onSubmitEditing={Keyboard.dismiss}
-            />
-
-            {showError && <Text style={styles.errorText}>Incorrect Password</Text>}
-            
-            <Pressable onPress={handleForgotPassword}>
-              <Text style={styles.forgotPassword}>Forgot your password?</Text>
-            </Pressable>
-
-            <PrimaryButton
-              title="Sign In"
-              onPress={handleSignIn}
-              style={styles.signInButton}
-              isActive={isFormFilled}
-              isLoading={isSigningIn}
-            />
-
-            <View style={styles.createAccountContainer}>
-              <View style={styles.leftLine} />
-              <Text style={styles.createAccountText}>Create an account</Text>
-              <View style={styles.rightLine} />
-            </View>
-
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={handleRegister}
+            <Animated.View
+              style={[
+                styles.logoContainer,
+                {
+                  transform: [{ translateY: logoPosition }],
+                },
+              ]}
             >
-              <Text style={styles.registerButtonText}>Register</Text>
-            </TouchableOpacity>
+              <Image
+                source={require('../../../assets/images/logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </Animated.View>
 
-            <Pressable onPress={handleEmailSupport} style={styles.supportContainer}>
-              <Text style={styles.supportText}>Can't Sign In? Email Support</Text>
-            </Pressable>
-          </Animated.View>
+            <Animated.View style={[styles.contentContainer, { opacity: contentOpacity }]}>
+              <InputField
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={styles.emailInput}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+              />
 
-          <Animated.View style={[styles.taglineContainer, { opacity: taglineOpacity }]}>
-            <View style={styles.taglineRow}>
-              <Text style={styles.taglineLight}>GOOD GOLF </Text>
-              <Text style={styles.taglineBold}>PAYS OFF</Text>
-            </View>
-          </Animated.View>
-        </View>
+              <InputField
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                style={styles.passwordInput}
+                secureTextEntry
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+              />
+
+              {showError && <Text style={styles.errorText}>Incorrect Password</Text>}
+              
+              <Pressable onPress={handleForgotPassword}>
+                <Text style={styles.forgotPassword}>Forgot your password?</Text>
+              </Pressable>
+
+              <PrimaryButton
+                title="Sign In"
+                onPress={handleSignIn}
+                style={styles.signInButton}
+                isActive={isFormFilled}
+                isLoading={isSigningIn}
+              />
+
+              <View style={styles.createAccountContainer}>
+                <View style={styles.leftLine} />
+                <Text style={styles.createAccountText}>Create an account</Text>
+                <View style={styles.rightLine} />
+              </View>
+
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={handleRegister}
+              >
+                <Text style={styles.registerButtonText}>Register</Text>
+              </TouchableOpacity>
+
+              <Pressable onPress={handleEmailSupport} style={styles.supportContainer}>
+                <Text style={styles.supportText}>Can't Sign In? Email Support</Text>
+              </Pressable>
+            </Animated.View>
+
+            <Animated.View style={[styles.taglineContainer, { opacity: taglineOpacity }]}>
+              <View style={styles.taglineRow}>
+                <Text style={styles.taglineLight}>GOOD GOLF </Text>
+                <Text style={styles.taglineBold}>PAYS OFF</Text>
+              </View>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </ImageBackground>
     </TouchableWithoutFeedback>
   );
@@ -208,11 +258,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContainer: {
+    flexGrow: 1,
+    minHeight: '100%',
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   logoContainer: {
     position: 'absolute',
     left: scaleWidth(32),
     width: scaleWidth(279),
     height: scaleHeight(177),
+    zIndex: 2,
   },
   logo: {
     width: '100%',

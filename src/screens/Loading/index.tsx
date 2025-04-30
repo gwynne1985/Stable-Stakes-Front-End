@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, StyleSheet, Image, Animated, ImageBackground } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, StyleSheet, Image, Animated } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { LoadingIndicator } from '../../components';
@@ -8,53 +8,72 @@ import { scaleWidth, scaleHeight } from '../../utils/scale';
 type Props = NativeStackScreenProps<RootStackParamList, 'Loading'>;
 
 export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
+  const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoPosition = useRef(new Animated.Value(scaleHeight(274))).current;
+  const loadingOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Start with loading indicator fade in
+    Animated.sequence([
+      Animated.timing(loadingOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      // Then fade in the logo at its initial position
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleLoadingComplete = () => {
-    // Move logo to new position
-    Animated.timing(logoPosition, {
-      toValue: scaleHeight(131),
-      duration: 500,
-      useNativeDriver: true,
-    }).start(() => {
-      // Navigate to Login screen
+    // First slide the logo up
+    Animated.sequence([
+      Animated.timing(logoPosition, {
+        toValue: scaleHeight(131),
+        duration: 1200,
+        useNativeDriver: true,
+      }),
+      // Then fade out loading indicator
+      Animated.timing(loadingOpacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Navigate to Login screen after logo is in position
       navigation.replace('Login');
     });
   };
 
   return (
-    <ImageBackground
-      source={require('../../../assets/images/golf-course.jpg')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        <Animated.View
-          style={[
-            styles.logoContainer,
-            {
-              transform: [{ translateY: logoPosition }],
-            },
-          ]}
-        >
-          <Image
-            source={require('../../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </Animated.View>
-        <View style={styles.loadingContainer}>
-          <LoadingIndicator onAnimationComplete={handleLoadingComplete} />
-        </View>
-      </View>
-    </ImageBackground>
+    <View style={styles.container}>
+      <Animated.View 
+        style={[
+          styles.logoContainer, 
+          { 
+            opacity: logoOpacity,
+            transform: [{ translateY: logoPosition }]
+          }
+        ]}
+      >
+        <Image
+          source={require('../../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </Animated.View>
+      <Animated.View style={[styles.loadingContainer, { opacity: loadingOpacity }]}>
+        <LoadingIndicator onAnimationComplete={handleLoadingComplete} />
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },
@@ -70,9 +89,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   loadingContainer: {
-    flex: 1,
+    position: 'absolute',
+    bottom: scaleHeight(100),
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: scaleHeight(100),
   },
 }); 
