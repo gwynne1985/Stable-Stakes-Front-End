@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@gorhom/portal": "^1.0.14",
     "@react-native-community/cli": "^18.0.0",
     "@react-navigation/bottom-tabs": "6.5.11",
     "@react-navigation/native": "6.1.9",

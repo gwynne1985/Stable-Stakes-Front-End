@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,13 @@ import {
   ImageBackground,
   Image,
   Animated,
-  PanResponder,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
+import { SimpleSlidingPanel } from './panels/SimpleSlidingPanel';
+import { AccountStep } from './panels/AccountStep';
+import { NotificationsStep } from './panels/NotificationsStep';
 
 interface Props {
   title: string;
@@ -18,38 +21,14 @@ interface Props {
   notificationCount?: number;
 }
 
-const PULL_THRESHOLD = 100;
-const CONTAINER_START = scaleHeight(100);
-
 export const PageContainer: React.FC<Props> = ({
   title,
   children,
   variant = 'light',
   notificationCount = 0,
 }) => {
-  const containerPosition = useRef(new Animated.Value(0)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          containerPosition.setValue(gestureState.dy * 0.5);
-        }
-      },
-      onPanResponderRelease: () => {
-        Animated.spring(containerPosition, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 40,
-          friction: 5,
-        }).start();
-      },
-    })
-  ).current;
+  const [isAccountPanelVisible, setIsAccountPanelVisible] = useState(false);
+  const [isNotificationPanelVisible, setIsNotificationPanelVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -59,39 +38,55 @@ export const PageContainer: React.FC<Props> = ({
         resizeMode="cover"
       >
         <View style={styles.header}>
-          <Image
-            source={require('../../assets/icons/navigation/account.png')}
-            style={styles.accountIcon}
-          />
-          <Text style={styles.title}>{title}</Text>
-          <View style={styles.notificationContainer}>
+          <TouchableOpacity onPress={() => setIsAccountPanelVisible(true)}>
             <Image
-              source={require('../../assets/icons/navigation/notifications.png')}
-              style={styles.notificationIcon}
+              source={require('../../assets/icons/navigation/account.png')}
+              style={styles.accountIcon}
             />
-            {notificationCount > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationText}>
-                  {notificationCount > 99 ? '99+' : notificationCount}
-                </Text>
-              </View>
-            )}
-          </View>
+          </TouchableOpacity>
+          <Text style={styles.title}>{title}</Text>
+          <TouchableOpacity onPress={() => setIsNotificationPanelVisible(true)}>
+            <View style={styles.notificationContainer}>
+              <Image
+                source={require('../../assets/icons/navigation/notifications.png')}
+                style={styles.notificationIcon}
+              />
+              {notificationCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationText}>
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
-        <Animated.View
+        <View
           style={[
             styles.contentContainer,
             variant === 'dark' ? styles.darkContent : styles.lightContent,
-            {
-              transform: [{ translateY: containerPosition }],
-            },
           ]}
-          {...panResponder.panHandlers}
         >
           {children}
-        </Animated.View>
+        </View>
       </ImageBackground>
+
+      <SimpleSlidingPanel
+        isVisible={isAccountPanelVisible}
+        title="Account"
+        onClose={() => setIsAccountPanelVisible(false)}
+      >
+        <AccountStep onClose={() => setIsAccountPanelVisible(false)} />
+      </SimpleSlidingPanel>
+
+      <SimpleSlidingPanel
+        isVisible={isNotificationPanelVisible}
+        title="Notifications"
+        onClose={() => setIsNotificationPanelVisible(false)}
+      >
+        <NotificationsStep onClose={() => setIsNotificationPanelVisible(false)} />
+      </SimpleSlidingPanel>
     </View>
   );
 };
@@ -172,25 +167,15 @@ const styles = StyleSheet.create({
     top: scaleHeight(100),
     left: 0,
     right: 0,
-    bottom: -100,
+    bottom: 0,
     borderTopLeftRadius: scaleWidth(20),
     borderTopRightRadius: scaleWidth(20),
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
+    overflow: 'hidden',
   },
   darkContent: {
     backgroundColor: '#18302A',
   },
   lightContent: {
-    backgroundColor: '#E3E3E3',
+    backgroundColor: '#FFFFFF',
   },
 }); 

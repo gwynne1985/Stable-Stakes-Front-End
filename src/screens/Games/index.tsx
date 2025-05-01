@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { PageContainer } from '../../components/PageContainer';
+import { GameEntrySection } from '../../components/games/GameEntrySection';
 
 export const GamesScreen = () => {
   return (
     <PageContainer title="Games" variant="dark" notificationCount={2}>
       <View style={styles.container}>
-        <Text style={styles.text}>Games Content</Text>
+        <GameEntrySection />
       </View>
     </PageContainer>
   );
@@ -15,10 +16,5 @@ export const GamesScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    color: '#FFFFFF',
   },
 }); 

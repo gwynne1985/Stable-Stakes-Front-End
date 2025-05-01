@@ -23,6 +23,8 @@ export const TabNavigator = () => {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
           paddingHorizontal: '4%',
+          zIndex: 1,
+          elevation: 1,
         },
         tabBarItemStyle: {
           paddingTop: 18,
