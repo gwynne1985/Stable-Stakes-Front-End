@@ -1,13 +1,57 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { PageContainer } from '../../components/PageContainer';
+import { AvailableToSpend } from '../../components/proshop/AvailableToSpend';
+import { SupportYourClub } from '../../components/proshop/SupportYourClub';
+import { RetailersGrid } from '../../components/proshop/RetailersGrid';
+import { RetailerRedemptionPanel } from '../../components/panels/RetailerRedemptionPanel';
+import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 export const ProShopScreen = () => {
+  const [selectedRetailer, setSelectedRetailer] = useState<{
+    name: string;
+    image: any;
+  } | null>(null);
+
+  const handleRetailerSelect = (retailer: { name: string; image: any }) => {
+    setSelectedRetailer(retailer);
+  };
+
+  const handleCloseRedemption = () => {
+    setSelectedRetailer(null);
+  };
+
   return (
-    <PageContainer title="Pro Shop" notificationCount={2}>
-      <View style={styles.container}>
-        <Text>Pro Shop Content</Text>
-      </View>
+    <PageContainer title="Pro Shop" variant="light" notificationCount={2}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.topContainer}>
+          <AvailableToSpend amount={888.00} />
+          <View style={styles.spacer} />
+          <SupportYourClub />
+          <View style={styles.spacer30} />
+          <Text style={styles.otherRetailersTitle}>OTHER RETAILERS</Text>
+          <View style={styles.spacer} />
+          <RetailersGrid onRetailerSelect={handleRetailerSelect} />
+          <View style={styles.bottomSpacer} />
+        </View>
+      </ScrollView>
+
+      <RetailerRedemptionPanel
+        isVisible={!!selectedRetailer}
+        retailerLogo={selectedRetailer?.image}
+        clubName={selectedRetailer?.name || ''}
+        descriptionText="Select your voucher amount below. Once confirmed, your voucher will be sent to your registered email address."
+        voucherRangeText="£20.00 - £500.00"
+        termsContent={`Terms and conditions for ${selectedRetailer?.name || ''} vouchers:\n\n1. Vouchers are valid for 12 months from the date of issue\n2. Cannot be exchanged for cash\n3. Must be redeemed in a single transaction\n4. Any remaining balance will be forfeited`}
+        minAmount={20}
+        maxAmount={500}
+        remainingBalance={888.00}
+        onClose={handleCloseRedemption}
+      />
     </PageContainer>
   );
 };
@@ -15,7 +59,34 @@ export const ProShopScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#E3E3E3',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  topContainer: {
+    paddingTop: scaleHeight(20),
     alignItems: 'center',
+  },
+  spacer: {
+    height: scaleHeight(20),
+  },
+  spacer30: {
+    height: scaleHeight(30),
+  },
+  bottomSpacer: {
+    height: scaleHeight(40),
+  },
+  otherRetailersTitle: {
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(22),
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: undefined,
+    letterSpacing: -0.22,
+    textTransform: 'uppercase',
+    alignSelf: 'flex-start',
+    paddingLeft: scaleWidth(27),
   },
 }); 
