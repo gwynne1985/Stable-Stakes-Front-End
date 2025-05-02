@@ -107,7 +107,7 @@ export const ScrollablePanel: React.FC<Props> = ({
       animationType="none"
       onRequestClose={handleClose}
     >
-      <View style={StyleSheet.absoluteFill}>
+      <View style={[StyleSheet.absoluteFill, styles.modalContainer]}>
         <TouchableWithoutFeedback onPress={handleClose}>
           <View style={[StyleSheet.absoluteFill, styles.overlay]} />
         </TouchableWithoutFeedback>
@@ -151,6 +151,9 @@ export const ScrollablePanel: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
+  modalContainer: {
+    zIndex: 0,
+  },
   overlay: {
     backgroundColor: 'transparent',
   },
@@ -168,6 +171,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'center',
+    zIndex: 0,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -202,6 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginTop: 8,
     opacity: 0.3,
+    alignSelf: 'center',
   },
   header: {
     width: '100%',
