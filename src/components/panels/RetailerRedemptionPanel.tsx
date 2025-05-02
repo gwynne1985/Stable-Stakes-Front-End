@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { ScrollablePanel } from './ScrollablePanel';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { RetailerTermsPanel } from './RetailerTermsPanel';
+import { ConfirmationPopup } from './ConfirmationPopup';
+import { VoucherPanel } from './VoucherPanel';
 
 interface RetailerRedemptionPanelProps {
   isVisible?: boolean;
@@ -15,6 +16,7 @@ interface RetailerRedemptionPanelProps {
   maxAmount: number;
   remainingBalance: number;
   onClose: () => void;
+  onVoucherConfirm: (amount: number, onConfirm: () => void) => void;
 }
 
 export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = ({
@@ -26,35 +28,33 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
   termsContent,
   minAmount,
   maxAmount,
-  remainingBalance,
+  remainingBalance: initialRemainingBalance,
   onClose,
+  onVoucherConfirm,
 }) => {
   const [amount, setAmount] = useState(minAmount);
   const [showTerms, setShowTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [remainingBalance, setRemainingBalance] = useState(initialRemainingBalance);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleIncrement = () => {
-    if (amount < maxAmount && amount + 20 <= remainingBalance) {
-      setAmount(prev => Math.min(prev + 20, maxAmount, remainingBalance));
+    const nextAmount = amount + 10;
+    if (nextAmount <= maxAmount) {
+      setAmount(nextAmount);
+      setRemainingBalance(initialRemainingBalance - nextAmount);
     }
   };
 
   const handleDecrement = () => {
     if (amount > minAmount) {
-      setAmount(prev => Math.max(prev - 20, minAmount));
+      const newAmount = amount - 10;
+      setAmount(newAmount);
+      setRemainingBalance(initialRemainingBalance - newAmount);
     }
   };
 
-  const handleNext = async () => {
-    if (amount > remainingBalance) {
-      Alert.alert(
-        'Insufficient Balance',
-        'The selected amount exceeds your available balance.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
+  const handleConfirmVoucher = async () => {
     setIsProcessing(true);
     try {
       // TODO: Implement actual voucher redemption API call here
@@ -75,78 +75,113 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
     }
   };
 
+  const handleNextPress = () => {
+    console.log('Next button pressed, showing confirmation');
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmationConfirm = () => {
+    console.log('Confirmation confirmed, calling onVoucherConfirm');
+    setShowConfirmation(false);
+    onVoucherConfirm(amount, handleConfirmVoucher);
+  };
+
+  const handleConfirmationCancel = () => {
+    console.log('Confirmation cancelled');
+    setShowConfirmation(false);
+  };
+
+  const isMaxedOut = amount >= maxAmount;
+
   return (
     <>
-      <ScrollablePanel 
-        title="RETAILER VOUCHERS" 
-        onClose={onClose}
+      <VoucherPanel
         isVisible={isVisible}
+        onClose={onClose}
       >
-        <View style={styles.container}>
-          {retailerLogo ? (
-            <Image 
-              source={retailerLogo} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          ) : (
-            <Text style={styles.clubName}>{clubName}</Text>
-          )}
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            {retailerLogo ? (
+              <Image 
+                source={retailerLogo} 
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={styles.clubName}>{clubName}</Text>
+            )}
 
-          <Text style={styles.description}>{descriptionText}</Text>
+            <Text style={styles.description}>{descriptionText}</Text>
 
-          <Text style={styles.voucherRange}>
-            Voucher Amount - {voucherRangeText}
-          </Text>
+            <Text style={styles.voucherRange}>{voucherRangeText}</Text>
 
-          <TouchableOpacity 
-            onPress={() => setShowTerms(true)}
-            style={styles.infoLink}
-          >
-            <Text style={styles.infoLinkText}>Voucher Information</Text>
-          </TouchableOpacity>
-
-          <View style={styles.amountSelector}>
             <TouchableOpacity 
-              onPress={handleDecrement}
-              style={[styles.button, amount <= minAmount && styles.buttonDisabled]}
-              disabled={amount <= minAmount || isProcessing}
+              onPress={() => setShowTerms(true)}
+              style={styles.infoLink}
             >
-              <Text style={styles.buttonText}>-</Text>
+              <Text style={styles.infoLinkText}>Voucher Information</Text>
             </TouchableOpacity>
 
-            <View style={styles.amountContainer}>
-              <Text style={styles.amountText}>£{amount.toFixed(2)}</Text>
+            <View style={styles.amountSelector}>
+              <TouchableOpacity 
+                onPress={handleDecrement}
+                style={[
+                  styles.button,
+                  (amount <= minAmount || isProcessing) && styles.buttonDisabled
+                ]}
+                disabled={amount <= minAmount || isProcessing}
+              >
+                <Text style={styles.buttonText}>-</Text>
+              </TouchableOpacity>
+
+              <View style={styles.amountContainer}>
+                <Text style={styles.amountText}>£{amount.toFixed(2)}</Text>
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleIncrement}
+                style={[
+                  styles.button,
+                  ((amount + 10) > maxAmount || isProcessing) && styles.buttonDisabled
+                ]}
+                disabled={(amount + 10) > maxAmount || isProcessing}
+              >
+                <Text style={styles.buttonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isMaxedOut && (
+              <Text style={styles.maxOutText}>Maximum voucher amount reached</Text>
+            )}
+
+            <View style={styles.balanceContainer}>
+              <View style={styles.balanceTextContainer}>
+                <View style={styles.balanceLabelContainer}>
+                  <Text style={styles.balanceLabel}>Remaining</Text>
+                  <Text style={styles.balanceLabel}>Balance:</Text>
+                </View>
+                <View style={styles.balanceAmountContainer}>
+                  <Text style={styles.balanceAmount}>£{remainingBalance.toFixed(2)}</Text>
+                </View>
+              </View>
             </View>
 
             <TouchableOpacity 
-              onPress={handleIncrement}
-              style={[
-                styles.button, 
-                (amount >= maxAmount || amount + 20 > remainingBalance) && styles.buttonDisabled
-              ]}
-              disabled={amount >= maxAmount || amount + 20 > remainingBalance || isProcessing}
+              style={[styles.nextButton, isProcessing && styles.buttonDisabled]}
+              onPress={handleNextPress}
+              disabled={isProcessing}
             >
-              <Text style={styles.buttonText}>+</Text>
+              <Text style={styles.nextButtonText}>
+                {isProcessing ? 'Processing...' : 'Next'}
+              </Text>
             </TouchableOpacity>
           </View>
-
-          <View style={styles.balanceContainer}>
-            <Text style={styles.balanceLabel}>Remaining Balance</Text>
-            <Text style={styles.balanceAmount}>£{remainingBalance.toFixed(2)}</Text>
-          </View>
-
-          <TouchableOpacity 
-            style={[styles.nextButton, isProcessing && styles.buttonDisabled]}
-            onPress={handleNext}
-            disabled={isProcessing}
-          >
-            <Text style={styles.nextButtonText}>
-              {isProcessing ? 'Processing...' : 'Next'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollablePanel>
+        </ScrollView>
+      </VoucherPanel>
 
       {showTerms && (
         <RetailerTermsPanel
@@ -154,15 +189,36 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
           onClose={() => setShowTerms(false)}
         />
       )}
+
+      <ConfirmationPopup
+        isVisible={showConfirmation}
+        title="CONFIRM VOUCHER"
+        message=""
+        onConfirm={handleConfirmationConfirm}
+        onCancel={handleConfirmationCancel}
+        confirmText="Confirm"
+        cancelText="Back"
+        retailerName={clubName}
+        amount={amount}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 0,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: scaleWidth(20),
+    paddingBottom: scaleHeight(20),
+    backgroundColor: '#E3E3E3',
   },
   logo: {
     width: scaleWidth(200),
@@ -177,13 +233,16 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(20),
   },
   description: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(14),
+    width: scaleWidth(300),
     color: '#18302A',
     textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(13),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(20.8),
     marginTop: scaleHeight(20),
     marginBottom: scaleHeight(30),
-    maxWidth: scaleWidth(280),
   },
   voucherRange: {
     fontFamily: 'Poppins',
@@ -193,7 +252,7 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(10),
   },
   infoLink: {
-    marginBottom: scaleHeight(30),
+    marginBottom: scaleHeight(50),
   },
   infoLinkText: {
     fontFamily: 'Poppins',
@@ -202,65 +261,118 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   amountSelector: {
+    width: scaleWidth(300),
+    height: scaleHeight(86),
+    flexShrink: 0,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#4EDD69',
+    backgroundColor: '#E3E3E3',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0F2F2',
-    borderRadius: 35,
-    padding: scaleWidth(6),
+    justifyContent: 'center',
+    padding: scaleWidth(20),
     marginBottom: scaleHeight(20),
   },
   button: {
-    width: scaleWidth(40),
-    height: scaleWidth(40),
+    width: scaleWidth(54),
+    height: scaleHeight(37),
+    flexShrink: 0,
     borderRadius: 20,
     backgroundColor: '#4EDD69',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonDisabled: {
-    opacity: 0.5,
+    backgroundColor: '#9BA19C',
   },
   buttonText: {
-    fontSize: scaleWidth(24),
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(32),
+    fontStyle: 'italic',
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: scaleHeight(42),
   },
   amountContainer: {
-    paddingHorizontal: scaleWidth(30),
+    width: scaleWidth(125),
+    height: scaleHeight(37),
+    flexShrink: 0,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#CCC',
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: scaleWidth(10),
   },
   amountText: {
+    color: '#18302A',
+    textAlign: 'center',
     fontFamily: 'Poppins',
     fontSize: scaleWidth(20),
-    fontWeight: '600',
-    color: '#18302A',
+    fontStyle: 'italic',
+    fontWeight: '800',
+    lineHeight: undefined,
+    letterSpacing: -1.2,
+    textTransform: 'uppercase',
   },
   balanceContainer: {
-    width: '100%',
-    backgroundColor: '#F0F2F2',
-    borderRadius: 35,
-    padding: scaleHeight(15),
-    alignItems: 'center',
+    width: scaleWidth(300),
+    height: scaleHeight(71),
+    backgroundColor: '#E3E3E3',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#4EDD69',
+    justifyContent: 'center',
     marginBottom: scaleHeight(20),
   },
+  balanceTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 20,
+    paddingRight: 20,
+    width: '100%',
+  },
+  balanceLabelContainer: {
+    justifyContent: 'center',
+    width: scaleWidth(100),
+  },
+  balanceAmountContainer: {
+    flex: 1,
+    paddingLeft: 10,
+    width: scaleWidth(160),
+  },
   balanceLabel: {
+    color: '#18302A',
     fontFamily: 'Poppins',
     fontSize: scaleWidth(13),
-    color: '#18302A',
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: undefined,
+    letterSpacing: -0.39,
   },
   balanceAmount: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(20),
-    fontWeight: '600',
     color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(24),
+    fontStyle: 'italic',
+    fontWeight: '800',
+    lineHeight: undefined,
+    letterSpacing: -1,
+    textTransform: 'uppercase',
+    textAlign: 'right',
   },
   nextButton: {
-    width: '100%',
+    width: scaleWidth(300),
     height: scaleHeight(41),
     backgroundColor: '#4EDD69',
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: scaleHeight(20),
+    marginTop: scaleHeight(20),
+    marginBottom: 0,
   },
   nextButtonText: {
     fontFamily: 'Poppins',
@@ -268,6 +380,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontStyle: 'italic',
     color: '#18302A',
-    textTransform: 'uppercase',
+  },
+  maxOutText: {
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(12),
+    color: '#9BA19C',
+    marginTop: scaleHeight(8),
+    marginBottom: scaleHeight(16),
+    textAlign: 'center',
   },
 }); 
