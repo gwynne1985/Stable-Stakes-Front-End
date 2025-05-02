@@ -1,6 +1,10 @@
-import React, { useRef, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Platform, Animated, Dimensions } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Platform, Animated, Dimensions, Image } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { PrimaryButton } from '../PrimaryButton';
+import { useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { TabParamList } from '../../navigation';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -28,9 +32,15 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
   amount
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const [processing, setProcessing] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const bigCircleScale = useRef(new Animated.Value(0)).current;
+  const smallCircles = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  const navigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
 
   useEffect(() => {
     if (isVisible) {
+      setComplete(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -43,9 +53,61 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
         duration: 300,
         useNativeDriver: true,
       }).start();
+      setProcessing(false);
+      setComplete(false);
     }
   }, [isVisible]);
-  
+
+  // Animate circles when complete
+  useEffect(() => {
+    if (complete) {
+      Animated.spring(bigCircleScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        friction: 5,
+        tension: 80,
+      }).start();
+      [0, 1, 2, 3, 4].forEach((i) => {
+        setTimeout(() => {
+          Animated.spring(smallCircles[i], {
+            toValue: 1,
+            useNativeDriver: true,
+            friction: 4,
+            tension: 60,
+          }).start();
+        }, 100 + 90 * i + Math.floor(Math.random() * 60));
+      });
+    } else {
+      bigCircleScale.setValue(0);
+      smallCircles.forEach(circle => circle.setValue(0));
+    }
+  }, [complete]);
+
+  const handleConfirm = () => {
+    setProcessing(true);
+    setTimeout(() => {
+      setProcessing(false);
+      setComplete(true);
+    }, 1200);
+    onConfirm(); // If you want to call the parent confirm logic as well
+  };
+
+  const handleClose = () => {
+    setComplete(false);
+    setProcessing(false);
+    onCancel();
+    navigation.navigate('ProShopScreen');
+  };
+
+  // For random sizes and positions (all unique)
+  const smallCircleStyles = [
+    { width: scaleWidth(18), height: scaleWidth(18), borderRadius: scaleWidth(9), top: -scaleWidth(16), left: scaleWidth(22) },
+    { width: scaleWidth(10), height: scaleWidth(10), borderRadius: scaleWidth(5), top: scaleWidth(8), left: -scaleWidth(8) },
+    { width: scaleWidth(14), height: scaleWidth(14), borderRadius: scaleWidth(7), top: scaleWidth(30), right: -scaleWidth(12) },
+    { width: scaleWidth(7), height: scaleWidth(7), borderRadius: scaleWidth(3.5), bottom: -scaleWidth(8), left: scaleWidth(8) },
+    { width: scaleWidth(13), height: scaleWidth(13), borderRadius: scaleWidth(6.5), bottom: -scaleWidth(18), right: scaleWidth(20) },
+  ];
+
   return (
     <Modal
       visible={isVisible}
@@ -63,37 +125,73 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
             }
           ]}
         >
-          <Text style={styles.title}>{title.toUpperCase()}</Text>
-          <View style={styles.infoBoxesContainer}>
-            <View style={styles.retailerBox}>
-              <Text style={styles.retailerLabel}>Retailer</Text>
-              <Text style={styles.retailerName}>{retailerName}</Text>
-            </View>
-            <View style={styles.amountBox}>
-              <Text style={styles.retailerLabel}>Amount</Text>
-              <Text style={styles.retailerName}>£{amount?.toFixed(2)}</Text>
-            </View>
-          </View>
-          <Text style={styles.termsText}>
-            By confirming your redemption you agree to our{' '}
-            <Text style={styles.underlinedText}>terms and conditions</Text>
-            {' '}and that of the selected retailer.
-          </Text>
-          <Text style={styles.message}>{message}</Text>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={[styles.button, styles.cancelButton]} 
-              onPress={onCancel}
-            >
-              <Text style={styles.buttonText}>{cancelText}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.confirmButton]} 
-              onPress={onConfirm}
-            >
-              <Text style={styles.buttonText}>{confirmText}</Text>
-            </TouchableOpacity>
-          </View>
+          {!complete ? (
+            <>
+              <Text style={styles.title}>{title.toUpperCase()}</Text>
+              <View style={styles.infoBoxesContainer}>
+                <View style={styles.retailerBox}>
+                  <Text style={styles.retailerLabel}>Retailer</Text>
+                  <Text style={styles.retailerName}>{retailerName}</Text>
+                </View>
+                <View style={styles.amountBox}>
+                  <Text style={styles.retailerLabel}>Amount</Text>
+                  <Text style={styles.retailerName}>£{amount?.toFixed(2)}</Text>
+                </View>
+              </View>
+              <Text style={styles.termsText}>
+                By confirming your redemption you agree to our{' '}
+                <Text style={styles.underlinedText}>terms and conditions</Text>
+                {' '}and that of the selected retailer.
+              </Text>
+              <Text style={styles.message}>{message}</Text>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={[styles.button, styles.cancelButton]} 
+                  onPress={onCancel}
+                  disabled={processing}
+                >
+                  <Text style={styles.buttonText}>{cancelText}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.button, styles.confirmButton, processing && { opacity: 0.7 }]} 
+                  onPress={handleConfirm}
+                  disabled={processing}
+                >
+                  <Text style={styles.buttonText}>{processing ? 'Processing...' : confirmText}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.title}>REDEMPTION COMPLETE</Text>
+              <View style={styles.completeContainer}>
+                {/* Animated big green circle */}
+                <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
+                  <Image source={require('../../../assets/icons/deposit-tick.png')} style={styles.tickIcon} />
+                  {/* Animated small circles */}
+                  {smallCircles.map((circle, i) => (
+                    <Animated.View
+                      key={i}
+                      style={[
+                        styles.smallCircle,
+                        smallCircleStyles[i],
+                        { transform: [{ scale: circle }] }
+                      ]}
+                    />
+                  ))}
+                </Animated.View>
+              </View>
+              <Text style={styles.completeText}>
+                Your voucher code will arrive in your inbox within the next 24 hours. Don't forget to check your spam folder, just in case!
+              </Text>
+              <PrimaryButton
+                title="Close"
+                onPress={handleClose}
+                isActive={true}
+                style={styles.primaryButton}
+              />
+            </>
+          )}
         </Animated.View>
       </View>
     </Modal>
@@ -236,5 +334,51 @@ const styles = StyleSheet.create({
   },
   underlinedText: {
     textDecorationLine: 'underline',
+  },
+  completeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: scaleHeight(20),
+  },
+  bigCircle: {
+    width: scaleWidth(70),
+    height: scaleWidth(70),
+    borderRadius: scaleWidth(35),
+    backgroundColor: '#4EDD69',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  tickIcon: {
+    width: scaleWidth(32),
+    height: scaleWidth(32),
+    resizeMode: 'contain',
+    position: 'absolute',
+    top: scaleWidth(19),
+    left: scaleWidth(19),
+  },
+  smallCircle: {
+    position: 'absolute',
+    width: scaleWidth(12),
+    height: scaleWidth(12),
+    borderRadius: scaleWidth(6),
+    backgroundColor: '#4EDD69',
+  },
+  completeText: {
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(12),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(19.2),
+    textAlign: 'center',
+    marginTop: scaleHeight(20),
+    marginBottom: scaleHeight(20),
+    paddingHorizontal: scaleWidth(10),
+  },
+  primaryButton: {
+    width: scaleWidth(300),
+    height: scaleHeight(40),
+    alignSelf: 'center',
   },
 }); 

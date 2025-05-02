@@ -34,7 +34,6 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
 }) => {
   const [amount, setAmount] = useState(minAmount);
   const [showTerms, setShowTerms] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [remainingBalance, setRemainingBalance] = useState(initialRemainingBalance);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
@@ -55,23 +54,12 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
   };
 
   const handleConfirmVoucher = async () => {
-    setIsProcessing(true);
     try {
       // TODO: Implement actual voucher redemption API call here
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
-      Alert.alert(
-        'Success',
-        'Your voucher has been generated and sent to your email.',
-        [{ text: 'OK', onPress: onClose }]
-      );
+      // No Alert here; let ConfirmationPopup handle the UI
     } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to generate voucher. Please try again.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setIsProcessing(false);
+      // Optionally handle error state here
     }
   };
 
@@ -82,13 +70,13 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
 
   const handleConfirmationConfirm = () => {
     console.log('Confirmation confirmed, calling onVoucherConfirm');
-    setShowConfirmation(false);
     onVoucherConfirm(amount, handleConfirmVoucher);
   };
 
   const handleConfirmationCancel = () => {
     console.log('Confirmation cancelled');
     setShowConfirmation(false);
+    onClose();
   };
 
   const isMaxedOut = amount >= maxAmount;
@@ -129,11 +117,8 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
             <View style={styles.amountSelector}>
               <TouchableOpacity 
                 onPress={handleDecrement}
-                style={[
-                  styles.button,
-                  (amount <= minAmount || isProcessing) && styles.buttonDisabled
-                ]}
-                disabled={amount <= minAmount || isProcessing}
+                style={styles.button}
+                disabled={amount <= minAmount}
               >
                 <Text style={styles.buttonText}>-</Text>
               </TouchableOpacity>
@@ -144,11 +129,8 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
 
               <TouchableOpacity 
                 onPress={handleIncrement}
-                style={[
-                  styles.button,
-                  ((amount + 10) > maxAmount || isProcessing) && styles.buttonDisabled
-                ]}
-                disabled={(amount + 10) > maxAmount || isProcessing}
+                style={styles.button}
+                disabled={(amount + 10) > maxAmount}
               >
                 <Text style={styles.buttonText}>+</Text>
               </TouchableOpacity>
@@ -171,13 +153,11 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
             </View>
 
             <TouchableOpacity 
-              style={[styles.nextButton, isProcessing && styles.buttonDisabled]}
+              style={styles.nextButton}
               onPress={handleNextPress}
-              disabled={isProcessing}
+              disabled={false}
             >
-              <Text style={styles.nextButtonText}>
-                {isProcessing ? 'Processing...' : 'Next'}
-              </Text>
+              <Text style={styles.nextButtonText}>Next</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
