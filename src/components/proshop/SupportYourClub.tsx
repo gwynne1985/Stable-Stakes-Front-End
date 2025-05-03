@@ -2,18 +2,24 @@ import React from 'react';
 import { View, Text, StyleSheet, ImageBackground, Image, TouchableOpacity } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 
-export const SupportYourClub: React.FC = () => {
+interface SupportYourClubProps {
+  onInfoPress?: () => void;
+}
+
+export const SupportYourClub: React.FC<SupportYourClubProps> = ({ onInfoPress }) => {
   return (
     <ImageBackground 
       source={require('../../../assets/images/golf-course.jpg')}
       style={styles.container}
       imageStyle={styles.backgroundImage}
     >
-      <Image 
-        source={require('../../../assets/icons/info.png')}
-        style={styles.infoIcon}
-        resizeMode="contain"
-      />
+      <TouchableOpacity onPress={onInfoPress} style={styles.infoIcon} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <Image 
+          source={require('../../../assets/icons/info.png')}
+          style={{ width: 20, height: 20, tintColor: '#FFFFFF' }}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
       <View style={styles.textContainer}>
         <Text style={styles.titleText}>SUPPORT</Text>
         <Text style={styles.titleText}>YOUR</Text>

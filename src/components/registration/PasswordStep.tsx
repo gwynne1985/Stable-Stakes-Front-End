@@ -1,87 +1,139 @@
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { PasswordFields } from '../PasswordFields';
 import { PrimaryButton } from '../PrimaryButton';
 
 interface PasswordStepProps {
-  password: string;
-  onPasswordChange: (password: string) => void;
-  onNext: () => void;
+  onNext: (password: string) => void;
 }
 
-export const PasswordStep: React.FC<PasswordStepProps> = ({
-  password,
-  onPasswordChange,
-  onNext,
-}) => {
-  const isValidPassword = useMemo(() => {
-    return password.length >= 8 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
-  }, [password]);
+export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
+  const [isValid, setIsValid] = useState(false);
+  const [password, setPassword] = useState('');
+
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+    setIsValid(true);
+  };
+
+  const handleConfirmPasswordChange = (confirmPassword: string) => {
+    // Additional validation if needed
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>CREATE PASSWORD</Text>
-      <Text style={styles.verificationText}>
-        Create a secure password for your account. Use at least 8 characters with a mix of letters and numbers.
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={onPasswordChange}
-        placeholder="Enter password"
-        placeholderTextColor="#18302A80"
-        secureTextEntry
-      />
-      <PrimaryButton
-        title="Next"
-        onPress={onNext}
-        isActive={isValidPassword}
-        style={styles.nextButton}
-      />
-    </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? scaleHeight(35) : 0}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
+      >
+        {/* Extra top spacer for more scroll/bounce */}
+        <View style={{ height: scaleHeight(80) }} />
+
+        <View style={styles.content}>
+          <Text style={styles.title}>CREATE PASSWORD</Text>
+          <Text style={styles.instructions}>
+            Minimum 8 characters, including an uppercase letter, number, and special character. No spaces.
+          </Text>
+        </View>
+
+        <View style={styles.fieldsContainer}>
+          <PasswordFields
+            onPasswordChange={handlePasswordChange}
+            onConfirmPasswordChange={handleConfirmPasswordChange}
+            shouldValidate={true}
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <PrimaryButton
+            title="Next"
+            onPress={() => onNext(password)}
+            isActive={isValid}
+          />
+        </View>
+
+        {/* Extra bottom spacer for more scroll/bounce */}
+        <View style={{ height: scaleHeight(120) }} />
+
+        {/* Haptic test button */}
+        <TouchableOpacity
+          style={styles.hapticTestButton}
+          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+        >
+          <Text style={styles.hapticTestText}>Test Haptic</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: scaleWidth(24),
   },
-  header: {
-    position: 'absolute',
-    top: scaleHeight(53),
-    left: scaleWidth(30),
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: scaleWidth(30),
+    paddingBottom: scaleHeight(40),
+  },
+  content: {
+    paddingTop: scaleHeight(20),
+    marginBottom: scaleHeight(40),
+  },
+  title: {
+    color: '#18302A',
     fontFamily: 'Poppins',
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: scaleWidth(20),
-    color: '#18302A',
+    letterSpacing: scaleWidth(-0.2),
+    textTransform: 'uppercase',
+    marginBottom: scaleHeight(8),
   },
-  verificationText: {
-    position: 'absolute',
-    top: scaleHeight(90),
-    left: scaleWidth(30),
-    fontFamily: 'Poppins-Medium',
-    fontSize: scaleWidth(13),
+  instructions: {
     color: '#18302A',
-  },
-  input: {
-    marginTop: scaleHeight(130),
-    height: scaleHeight(48),
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: scaleWidth(16),
     fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
-    color: '#18302A',
-    marginBottom: scaleHeight(24),
+    fontSize: scaleWidth(13),
+    fontWeight: '500',
+    lineHeight: scaleHeight(20),
   },
-  nextButton: {
+  fieldsContainer: {
+    marginBottom: scaleHeight(40),
+  },
+  buttonContainer: {
+    marginBottom: scaleHeight(40),
+  },
+  hapticTestButton: {
+    marginTop: scaleHeight(40),
     alignSelf: 'center',
+    backgroundColor: '#18302A',
+    paddingVertical: scaleHeight(12),
+    paddingHorizontal: scaleWidth(24),
+    borderRadius: 8,
+  },
+  hapticTestText: {
+    color: '#fff',
+    fontSize: scaleWidth(16),
+    fontWeight: 'bold',
   },
 }); 

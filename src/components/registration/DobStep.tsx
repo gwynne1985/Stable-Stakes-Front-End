@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   },
   verificationText: {
     position: 'absolute',
-    top: scaleHeight(90),
+    top: scaleHeight(110),
     left: scaleWidth(30),
     fontFamily: 'Poppins-Medium',
     fontSize: scaleWidth(13),

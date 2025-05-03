@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../utils/scale';
 import { EmailStep } from './registration/EmailStep';
 import { VerificationStep } from './registration/VerificationStep';
@@ -46,9 +47,12 @@ export const SlidingPanel: React.FC<Props> = ({
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState<Date | null>(null);
   const [golfClub, setGolfClub] = useState('');
   const [chdId, setChdId] = useState('');
+  const hasCrossedThresholdRef = useRef(false);
   
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const slideX = useRef(new Animated.Value(0)).current;
@@ -67,10 +71,19 @@ export const SlidingPanel: React.FC<Props> = ({
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
+          // Haptic feedback only when crossing threshold (Airbnb style, using ref)
+          if (!hasCrossedThresholdRef.current && gestureState.dy > SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = true;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (hasCrossedThresholdRef.current && gestureState.dy <= SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = false;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         panY.flattenOffset();
+        hasCrossedThresholdRef.current = false; // Reset for next gesture
         if (gestureState.dy > SWIPE_THRESHOLD) {
           onClose();
         } else {
@@ -173,15 +186,15 @@ export const SlidingPanel: React.FC<Props> = ({
         )}
         {step === 3 && (
           <PasswordStep
-            password={password}
-            onPasswordChange={setPassword}
             onNext={handleNext}
           />
         )}
         {step === 4 && (
           <NameStep
-            name={name}
-            onNameChange={setName}
+            firstName={firstName}
+            lastName={lastName}
+            onFirstNameChange={setFirstName}
+            onLastNameChange={setLastName}
             onNext={handleNext}
           />
         )}

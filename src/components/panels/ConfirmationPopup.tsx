@@ -101,9 +101,9 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
 
   // For random sizes and positions (all unique)
   const smallCircleStyles = [
-    { width: scaleWidth(18), height: scaleWidth(18), borderRadius: scaleWidth(9), top: -scaleWidth(16), left: scaleWidth(22) },
+    { width: scaleWidth(18), height: scaleWidth(18), borderRadius: scaleWidth(9), top: -scaleWidth(28), left: scaleWidth(22) },
     { width: scaleWidth(10), height: scaleWidth(10), borderRadius: scaleWidth(5), top: scaleWidth(8), left: -scaleWidth(8) },
-    { width: scaleWidth(14), height: scaleWidth(14), borderRadius: scaleWidth(7), top: scaleWidth(30), right: -scaleWidth(12) },
+    { width: scaleWidth(14), height: scaleWidth(14), borderRadius: scaleWidth(7), top: scaleWidth(30), right: -scaleWidth(24) },
     { width: scaleWidth(7), height: scaleWidth(7), borderRadius: scaleWidth(3.5), bottom: -scaleWidth(8), left: scaleWidth(8) },
     { width: scaleWidth(13), height: scaleWidth(13), borderRadius: scaleWidth(6.5), bottom: -scaleWidth(18), right: scaleWidth(20) },
   ];

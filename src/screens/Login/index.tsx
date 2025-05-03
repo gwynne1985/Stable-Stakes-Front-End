@@ -28,6 +28,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showError, setShowError] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Animation values
   const contentOpacity = useRef(new Animated.Value(0)).current;
@@ -119,7 +120,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     ]).start(() => {
       // Hold for a moment before navigating
       setTimeout(() => {
-        navigation.replace('MainApp');
+        navigation.replace('MainApp', undefined);
       }, 500);
     });
   };
@@ -194,15 +195,26 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 returnKeyType="next"
               />
 
-              <InputField
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                style={styles.passwordInput}
-                secureTextEntry
-                returnKeyType="done"
-                onSubmitEditing={Keyboard.dismiss}
-              />
+              <View style={styles.passwordContainer}>
+                <InputField
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.passwordInput}
+                  secureTextEntry={!showPassword}
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon} 
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Image 
+                    source={showPassword ? require('../../../assets/icons/eye-off.png') : require('../../../assets/icons/eye.png')} 
+                    style={styles.eyeIconImage}
+                  />
+                </TouchableOpacity>
+              </View>
 
               {showError && <Text style={styles.errorText}>Incorrect Password</Text>}
               
@@ -277,15 +289,23 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  inputContainer: {
+    position: 'relative',
+  },
   emailInput: {
     position: 'absolute',
     left: scaleWidth(30),
     top: scaleHeight(334),
   },
-  passwordInput: {
+  passwordContainer: {
     position: 'absolute',
     left: scaleWidth(30),
     top: scaleHeight(406),
+    width: scaleWidth(300),
+  },
+  passwordInput: {
+    width: '100%',
+    paddingRight: scaleWidth(40),
   },
   errorText: {
     position: 'absolute',
@@ -402,5 +422,16 @@ const styles = StyleSheet.create({
     fontSize: scaleWidth(20),
     letterSpacing: scaleWidth(-0.2),
     textTransform: 'uppercase',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: scaleWidth(10),
+    top: '50%',
+    transform: [{ translateY: -scaleHeight(14.5) }],
+    padding: scaleWidth(5),
+  },
+  eyeIconImage: {
+    width: scaleWidth(20),
+    height: scaleWidth(20),
   },
 }); 

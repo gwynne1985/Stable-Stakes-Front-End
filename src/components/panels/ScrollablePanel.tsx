@@ -13,12 +13,15 @@ import {
   Modal,
   ScrollView,
   PanResponder,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const TOP_GAP = scaleHeight(50);
-const SWIPE_THRESHOLD = 50;
+const SWIPE_THRESHOLD = 100; // Make swipe less sensitive
 
 interface Props {
   isVisible: boolean;
@@ -36,6 +39,8 @@ export const ScrollablePanel: React.FC<Props> = ({
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const panY = useRef(new Animated.Value(0)).current;
   const [isRendered, setIsRendered] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+  const hasCrossedThresholdRef = useRef(false);
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
@@ -50,9 +55,13 @@ export const ScrollablePanel: React.FC<Props> = ({
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => {
+        console.log('START');
+        return true;
+      },
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        // Only allow swipe-to-dismiss if scrollY is at the top
+        return scrollY === 0 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
       },
       onPanResponderGrant: () => {
         panY.extractOffset();
@@ -60,10 +69,19 @@ export const ScrollablePanel: React.FC<Props> = ({
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
+          // Haptic feedback only when crossing threshold (Airbnb style, using ref)
+          if (!hasCrossedThresholdRef.current && gestureState.dy > SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = true;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (hasCrossedThresholdRef.current && gestureState.dy <= SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = false;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         panY.flattenOffset();
+        hasCrossedThresholdRef.current = false; // Reset for next gesture
         if (gestureState.dy > SWIPE_THRESHOLD) {
           handleClose();
         } else {
@@ -83,7 +101,7 @@ export const ScrollablePanel: React.FC<Props> = ({
       setIsRendered(true);
       slideAnim.setValue(SCREEN_HEIGHT);
       panY.setValue(0);
-      
+      setScrollY(0);
       Animated.spring(slideAnim, {
         toValue: TOP_GAP,
         useNativeDriver: true,
@@ -95,6 +113,7 @@ export const ScrollablePanel: React.FC<Props> = ({
     return () => {
       slideAnim.setValue(SCREEN_HEIGHT);
       panY.setValue(0);
+      setScrollY(0);
     };
   }, [isVisible]);
 
@@ -140,6 +159,11 @@ export const ScrollablePanel: React.FC<Props> = ({
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={true}
               bounces={true}
+              alwaysBounceVertical={true}
+              onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                setScrollY(e.nativeEvent.contentOffset.y);
+              }}
+              scrollEventThrottle={16}
             >
               {children}
             </ScrollView>

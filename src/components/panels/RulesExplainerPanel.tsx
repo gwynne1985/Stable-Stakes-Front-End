@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ScrollablePanel } from './ScrollablePanel';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 
@@ -15,33 +16,33 @@ interface RulesExplainerPanelProps {
 
 const RULES_CONTENT = [
   {
-    title: "1. SELECT A GAME",
-    description: "Choose from our selection of competitive games. Each game has its own rules and entry requirements.",
+    title: "1. CHOOSE A GAME",
+    description: "Pick from three different games, each with its own target Stableford score and reward level. The higher the target score, the higher the potential reward.",
     image: require('../../../assets/images/rules/game-rules-1.png'),
   },
   {
-    title: "2. ENTER YOUR DETAILS",
-    description: "Provide your golf handicap and other required information to ensure fair competition.",
+    title: "2. PLACE YOUR STAKE",
+    description: "Decide how much to stake: £10, £20, or £50. Higher stakes mean bigger potential winnings.",
     image: require('../../../assets/images/rules/game-rules-2.png'),
   },
   {
-    title: "3. MAKE YOUR PREDICTION",
-    description: "Predict your score for the upcoming round. Be realistic - you'll need to match or beat this score!",
+    title: "3. TELL US WHEN YOU'LL PLAY",
+    description: "Enter the date of your competition round. Stakes must be placed by 11:59pm the day before your comp. You can enter multiple games for extra chances to win.",
     image: require('../../../assets/images/rules/game-rules-3.png'),
   },
   {
-    title: "4. PAY ENTRY FEE",
-    description: "Pay the entry fee using your preferred payment method. All transactions are secure and encrypted.",
+    title: "4. SUBMIT YOUR SCORE",
+    description: "The day after your round, we'll prompt you to enter your Stableford score. If you hit or exceed your target, upload a screenshot of your official scorecard from IG app or How Did I Do.",
     image: require('../../../assets/images/rules/game-rules-4.png'),
   },
   {
-    title: "5. PLAY YOUR ROUND",
-    description: "Play your round of golf as normal. Make sure to follow all standard golf rules and etiquette.",
+    title: "5. WAIT FOR APPROVAL",
+    description: "Scores are verified against your handicap and competition records. Once approved, winnings appear in your Stable Stakes wallet within 48 hours.",
     image: require('../../../assets/images/rules/game-rules-5.png'),
   },
   {
-    title: "6. SUBMIT YOUR SCORE",
-    description: "After your round, submit your scorecard for verification. If you beat your prediction, you win!",
+    title: "6. SPEND YOUR REWARDS",
+    description: "Redeem your winnings for vouchers at your club's pro shop or partner golf retailers. Treat yourself to new gear, lessons, or equipment—because good golf pays off!",
     image: require('../../../assets/images/rules/game-rules-6.png'),
   },
 ];
@@ -58,13 +59,21 @@ export const RulesExplainerPanel: React.FC<RulesExplainerPanelProps> = ({
     >
       {RULES_CONTENT.map((rule, index) => (
         <View key={index} style={styles.card}>
-          <Image
-            source={rule.image}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <View style={styles.imageContainer}>
+            <Image
+              source={rule.image}
+              style={styles.image}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.10)", "rgba(0,0,0,0.55)"]}
+              style={styles.imageOverlay}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+            />
+            <Text style={styles.titleOverlay}>{rule.title}</Text>
+          </View>
           <View style={styles.textContainer}>
-            <Text style={styles.title}>{rule.title}</Text>
             <Text style={styles.description}>{rule.description}</Text>
           </View>
         </View>
@@ -75,10 +84,18 @@ export const RulesExplainerPanel: React.FC<RulesExplainerPanelProps> = ({
 
 const styles = StyleSheet.create({
   card: {
+    width: scaleWidth(300),
+    height: scaleHeight(319),
     backgroundColor: '#FFFFFF',
     borderRadius: scaleWidth(20),
     marginBottom: scaleHeight(16),
     overflow: 'hidden',
+    alignSelf: 'center',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: scaleHeight(180),
   },
   image: {
     width: '100%',
@@ -86,21 +103,43 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: scaleWidth(20),
     borderTopRightRadius: scaleWidth(20),
   },
+  imageOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: scaleHeight(90),
+    borderBottomLeftRadius: scaleWidth(20),
+    borderBottomRightRadius: scaleWidth(20),
+  },
   textContainer: {
     padding: scaleWidth(20),
   },
-  title: {
+  titleOverlay: {
+    position: 'absolute',
+    left: scaleWidth(12),
+    top: scaleHeight(137),
+    color: '#FFFFFF',
     fontFamily: 'Poppins',
     fontWeight: '900',
-    fontSize: scaleWidth(20),
-    color: '#18302A',
-    marginBottom: scaleHeight(8),
+    fontSize: scaleWidth(16),
     fontStyle: 'italic',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   description: {
     fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
+    fontSize: scaleWidth(13),
     color: '#18302A',
-    lineHeight: scaleHeight(24),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(20.839),
+  },
+  bold: {
+    fontWeight: 'bold',
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
   },
 }); 

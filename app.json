@@ -22,6 +22,7 @@
     "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
+      "jsEngine": "hermes",
       "splash": {
         "image": "./assets/images/golf-course.jpg",
         "resizeMode": "cover",
@@ -38,11 +39,13 @@
         "resizeMode": "cover",
         "backgroundColor": "#FFFFFF"
       },
-      "newArchEnabled": true
+      "newArchEnabled": true,
+      "jsEngine": "hermes"
     },
     "experiments": {
       "tsconfigPaths": true
     },
+    "jsEngine": "hermes",
     "newArchEnabled": true
   }
 } 

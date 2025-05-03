@@ -1,46 +1,56 @@
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
+import { InputField } from '../InputField';
 
 interface NameStepProps {
-  name: string;
-  onNameChange: (name: string) => void;
+  firstName: string;
+  lastName: string;
+  onFirstNameChange: (firstName: string) => void;
+  onLastNameChange: (lastName: string) => void;
   onNext: () => void;
 }
 
 export const NameStep: React.FC<NameStepProps> = ({
-  name,
-  onNameChange,
+  firstName,
+  lastName,
+  onFirstNameChange,
+  onLastNameChange,
   onNext,
 }) => {
-  const isValidName = useMemo(() => {
-    return name.trim().length >= 2 && /^[A-Za-z\s]+$/.test(name);
-  }, [name]);
+  const isFormValid = () => {
+    return (firstName?.length ?? 0) > 0 && (lastName?.length ?? 0) > 0;
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>ENTER NAME</Text>
-      <Text style={styles.verificationText}>
-        Please enter your full name as it appears on your golf club membership.
-      </Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={onNameChange}
-        placeholder="Full name"
-        placeholderTextColor="#18302A80"
-        autoCapitalize="words"
-      />
+      <Text style={styles.header}>NAME</Text>
+      
+      <View style={styles.fieldsContainer}>
+        <InputField
+          placeholder="First Name"
+          value={firstName}
+          onChangeText={onFirstNameChange}
+          style={styles.input}
+        />
+
+        <InputField
+          placeholder="Last Name"
+          value={lastName}
+          onChangeText={onLastNameChange}
+          style={styles.input}
+        />
+      </View>
+      
       <PrimaryButton
         title="Next"
         onPress={onNext}
-        isActive={isValidName}
+        isActive={isFormValid()}
         style={styles.nextButton}
       />
     </View>
@@ -62,26 +72,33 @@ const styles = StyleSheet.create({
     fontSize: scaleWidth(20),
     color: '#18302A',
   },
-  verificationText: {
+  fieldsContainer: {
     position: 'absolute',
-    top: scaleHeight(90),
-    left: scaleWidth(30),
-    fontFamily: 'Poppins-Medium',
-    fontSize: scaleWidth(13),
-    color: '#18302A',
+    top: scaleHeight(196),
+    width: '100%',
+    alignItems: 'flex-start',
+    paddingLeft: scaleWidth(30),
   },
   input: {
-    marginTop: scaleHeight(130),
-    height: scaleHeight(48),
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: scaleWidth(16),
+    width: scaleWidth(300),
+    paddingVertical: scaleWidth(16),
+    paddingLeft: scaleWidth(16),
+    textAlign: 'left',
     fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
-    color: '#18302A',
-    marginBottom: scaleHeight(24),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: undefined,
+    borderRadius: scaleWidth(5),
+    fontSize: scaleWidth(14),
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: 'rgba(96, 133, 123, 0.50)',
+    color: 'rgba(96, 133, 123, 0.50)',
+    marginBottom: scaleHeight(16),
   },
   nextButton: {
+    position: 'absolute',
+    top: scaleHeight(495),
     alignSelf: 'center',
   },
 }); 

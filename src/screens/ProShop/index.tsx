@@ -5,6 +5,7 @@ import { AvailableToSpend } from '../../components/proshop/AvailableToSpend';
 import { SupportYourClub } from '../../components/proshop/SupportYourClub';
 import { RetailersGrid } from '../../components/proshop/RetailersGrid';
 import { RetailerRedemptionPanel } from '../../components/panels/RetailerRedemptionPanel';
+import { ClubRedemptionPanel } from '../../components/panels/ClubRedemptionPanel';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 export const ProShopScreen = () => {
@@ -12,51 +13,82 @@ export const ProShopScreen = () => {
     name: string;
     image: any;
   } | null>(null);
+  const [isClubRedemptionVisible, setIsClubRedemptionVisible] = useState(false);
 
   const handleRetailerSelect = (retailer: { name: string; image: any }) => {
+    console.log('Retailer selected:', retailer.name);
     setSelectedRetailer(retailer);
   };
 
   const handleCloseRedemption = () => {
+    console.log('Closing redemption panel');
     setSelectedRetailer(null);
   };
 
+  const handleVoucherConfirm = (amount: number, onConfirm: () => void) => {
+    console.log('handleVoucherConfirm called:', {
+      amount,
+      retailerName: selectedRetailer?.name,
+      hasOnConfirm: !!onConfirm
+    });
+    
+    if (selectedRetailer && onConfirm) {
+      onConfirm();
+    }
+  };
+
+  const handleInfoIconPress = () => {
+    setIsClubRedemptionVisible(true);
+  };
+
   return (
-    <PageContainer title="Pro Shop" variant="light" notificationCount={2}>
-      <ScrollView 
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.topContainer}>
-          <AvailableToSpend amount={888.00} />
-          <View style={styles.spacer} />
-          <SupportYourClub />
-          <View style={styles.spacer30} />
-          <Text style={styles.otherRetailersTitle}>OTHER RETAILERS</Text>
-          <View style={styles.spacer} />
-          <RetailersGrid onRetailerSelect={handleRetailerSelect} />
-          <View style={styles.bottomSpacer} />
-        </View>
-      </ScrollView>
+    <>
+      <View style={styles.root}>
+        <PageContainer title="Pro Shop" variant="light" notificationCount={2}>
+          <ScrollView 
+            style={styles.container}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.topContainer}>
+              <AvailableToSpend amount={888.00} />
+              <View style={styles.spacer} />
+              <SupportYourClub onInfoPress={handleInfoIconPress} />
+              <View style={styles.spacer30} />
+              <Text style={styles.otherRetailersTitle}>OTHER RETAILERS</Text>
+              <View style={styles.spacer} />
+              <RetailersGrid onRetailerSelect={handleRetailerSelect} />
+              <View style={styles.bottomSpacer} />
+            </View>
+          </ScrollView>
+        </PageContainer>
+      </View>
 
       <RetailerRedemptionPanel
         isVisible={!!selectedRetailer}
         retailerLogo={selectedRetailer?.image}
         clubName={selectedRetailer?.name || ''}
         descriptionText="Select your voucher amount below. Once confirmed, your voucher will be sent to your registered email address."
-        voucherRangeText="£20.00 - £500.00"
+        voucherRangeText="Voucher Amount: £20 - £500"
         termsContent={`Terms and conditions for ${selectedRetailer?.name || ''} vouchers:\n\n1. Vouchers are valid for 12 months from the date of issue\n2. Cannot be exchanged for cash\n3. Must be redeemed in a single transaction\n4. Any remaining balance will be forfeited`}
         minAmount={20}
         maxAmount={500}
         remainingBalance={888.00}
         onClose={handleCloseRedemption}
+        onVoucherConfirm={handleVoucherConfirm}
       />
-    </PageContainer>
+      <ClubRedemptionPanel
+        isVisible={isClubRedemptionVisible}
+        onClose={() => setIsClubRedemptionVisible(false)}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#E3E3E3',
