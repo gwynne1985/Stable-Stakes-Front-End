@@ -1,12 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { PageContainer } from '../../components/PageContainer';
+import { StatsRow } from '../../components/StatsRow';
+import { TabHeader } from '../../components/TabHeader';
+import { UpcomingGamesSection } from './UpcomingGamesSection';
 
 export const MyGamesScreen = () => {
+  const [activeTab, setActiveTab] = useState<'Upcoming' | 'Complete'>('Upcoming');
   return (
     <PageContainer title="Your Games" variant="light" notificationCount={2}>
       <View style={styles.container}>
-        <Text>My Games Content</Text>
+        <StatsRow />
+        <TabHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        <UpcomingGamesSection activeTab={activeTab} />
       </View>
     </PageContainer>
   );

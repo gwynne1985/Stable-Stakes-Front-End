@@ -3,12 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PasswordFields } from '../PasswordFields';
 import { PrimaryButton } from '../PrimaryButton';
@@ -32,28 +30,19 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
 
   return (
     <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? scaleHeight(35) : 0}
+      keyboardVerticalOffset={scaleHeight(35)}
     >
       <ScrollView
-        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        bounces={true}
-        alwaysBounceVertical={true}
       >
-        {/* Extra top spacer for more scroll/bounce */}
-        <View style={{ height: scaleHeight(80) }} />
-
-        <View style={styles.content}>
-          <Text style={styles.title}>CREATE PASSWORD</Text>
-          <Text style={styles.instructions}>
-            Minimum 8 characters, including an uppercase letter, number, and special character. No spaces.
-          </Text>
-        </View>
-
+        <Text style={styles.header}>CREATE PASSWORD</Text>
+        <Text style={styles.instructions}>
+          Minimum 8 characters, including an uppercase letter, number, and special character. No spaces.
+        </Text>
         <View style={styles.fieldsContainer}>
           <PasswordFields
             onPasswordChange={handlePasswordChange}
@@ -61,79 +50,47 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
             shouldValidate={true}
           />
         </View>
-
-        <View style={styles.buttonContainer}>
-          <PrimaryButton
-            title="Next"
-            onPress={() => onNext(password)}
-            isActive={isValid}
-          />
-        </View>
-
-        {/* Extra bottom spacer for more scroll/bounce */}
-        <View style={{ height: scaleHeight(120) }} />
-
-        {/* Haptic test button */}
-        <TouchableOpacity
-          style={styles.hapticTestButton}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-        >
-          <Text style={styles.hapticTestText}>Test Haptic</Text>
-        </TouchableOpacity>
+        <PrimaryButton
+          title="Next"
+          onPress={() => onNext(password)}
+          isActive={isValid}
+          style={styles.nextButton}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: scaleWidth(24),
+    paddingTop: scaleHeight(53),
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: scaleWidth(30),
-    paddingBottom: scaleHeight(40),
-  },
-  content: {
-    paddingTop: scaleHeight(20),
-    marginBottom: scaleHeight(40),
-  },
-  title: {
-    color: '#18302A',
+  header: {
     fontFamily: 'Poppins',
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: scaleWidth(20),
-    letterSpacing: scaleWidth(-0.2),
-    textTransform: 'uppercase',
+    color: '#18302A',
     marginBottom: scaleHeight(8),
   },
   instructions: {
-    color: '#18302A',
-    fontFamily: 'Poppins',
+    fontFamily: 'Poppins-Medium',
     fontSize: scaleWidth(13),
-    fontWeight: '500',
-    lineHeight: scaleHeight(20),
+    color: '#18302A',
+    marginBottom: scaleHeight(24),
   },
   fieldsContainer: {
-    marginBottom: scaleHeight(40),
+    marginBottom: scaleHeight(24),
+    width: '100%',
   },
-  buttonContainer: {
-    marginBottom: scaleHeight(40),
-  },
-  hapticTestButton: {
-    marginTop: scaleHeight(40),
-    alignSelf: 'center',
-    backgroundColor: '#18302A',
-    paddingVertical: scaleHeight(12),
-    paddingHorizontal: scaleWidth(24),
-    borderRadius: 8,
-  },
-  hapticTestText: {
-    color: '#fff',
-    fontSize: scaleWidth(16),
-    fontWeight: 'bold',
+  nextButton: {
+    width: '100%',
+    marginTop: scaleHeight(24),
   },
 }); 

@@ -51,7 +51,7 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
 
   const getPasswordFieldStyle = (isValid: boolean): ViewStyle & TextStyle => {
     const baseStyle: ViewStyle & TextStyle = {
-      width: scaleWidth(300),
+      width: '100%',
       paddingVertical: scaleWidth(16),
       paddingLeft: scaleWidth(16),
       paddingRight: scaleWidth(40),
@@ -86,7 +86,7 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
 
   const getConfirmPasswordFieldStyle = (isValid: boolean): ViewStyle & TextStyle => {
     const baseStyle: ViewStyle & TextStyle = {
-      width: scaleWidth(300),
+      width: '100%',
       paddingVertical: scaleWidth(16),
       paddingLeft: scaleWidth(16),
       paddingRight: scaleWidth(40),
@@ -170,7 +170,6 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'flex-start',
-    paddingLeft: scaleWidth(30),
   },
   passwordContainer: {
     position: 'relative',

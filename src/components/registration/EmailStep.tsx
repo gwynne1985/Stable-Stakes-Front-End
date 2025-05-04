@@ -1,12 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
+import { InputField } from '../InputField';
 
 interface EmailStepProps {
   email: string;
@@ -14,82 +17,126 @@ interface EmailStepProps {
   onNext: () => void;
 }
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const EmailStep: React.FC<EmailStepProps> = ({
   email,
   onEmailChange,
   onNext,
 }) => {
-  const isValidEmail = useMemo(() => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }, [email]);
+  const [isValidEmail, setIsValidEmail] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced validation
+  useEffect(() => {
+    if (!showValidation) return;
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      setIsValidEmail(emailRegex.test(email));
+    }, 500);
+    return () => {
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, showValidation]);
+
+  const handleChange = (text: string) => {
+    onEmailChange(text);
+    setShowValidation(false);
+    setIsValidEmail(false);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      setShowValidation(true);
+      setIsValidEmail(emailRegex.test(text));
+    }, 500);
+  };
+
+  const handleBlur = () => {
+    setShowValidation(true);
+    setIsValidEmail(emailRegex.test(email));
+  };
+
+  const shouldShowError = showValidation && email.length > 0 && !isValidEmail;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>ENTER EMAIL</Text>
-      <Text style={styles.verificationText}>
-        We'll send a <Text style={styles.boldText}>verification code</Text> to your Inbox to confirm your email address.
-      </Text>
-      <TextInput
-        style={[
-          styles.input,
-          email.length === 0
-            ? styles.inputInactive
-            : isValidEmail
-            ? styles.inputValid
-            : styles.inputInvalid,
-        ]}
-        value={email}
-        onChangeText={onEmailChange}
-        placeholder="Email"
-        placeholderTextColor="rgba(96, 133, 123, 0.50)"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-      />
-      <Text style={styles.legalCopy}>
-        By continuing, I agree to Stable Stakes{' '}
-        <Text style={styles.legalLink}>Privacy Policy</Text> and{' '}
-        <Text style={styles.legalLink}>Terms of Use</Text>.
-      </Text>
-      <PrimaryButton
-        title="Next"
-        onPress={onNext}
-        isActive={isValidEmail}
-        style={styles.nextButton}
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={scaleHeight(35)}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.header}>ENTER EMAIL</Text>
+        <Text style={styles.verificationText}>
+          We'll send a <Text style={styles.boldText}>verification code</Text> to your Inbox to confirm your email address.
+        </Text>
+        <View style={styles.inputContainer}>
+          <InputField
+            style={styles.input}
+            value={email}
+            onChangeText={handleChange}
+            onBlur={handleBlur}
+            placeholder="Email"
+            placeholderTextColor="rgba(96, 133, 123, 0.50)"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            isInvalid={shouldShowError}
+            errorMessage={shouldShowError ? 'Enter a valid email' : undefined}
+          />
+        </View>
+        <Text style={styles.legalCopy}>
+          By continuing, I agree to Stable Stakes{' '}
+          <Text style={styles.legalLink}>Privacy Policy</Text> and{' '}
+          <Text style={styles.legalLink}>Terms of Use</Text>.
+        </Text>
+        <PrimaryButton
+          title="Next"
+          onPress={onNext}
+          isActive={isValidEmail}
+          style={styles.nextButton}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: scaleWidth(24),
+    paddingTop: scaleHeight(53),
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
-    paddingHorizontal: scaleWidth(24),
   },
   header: {
-    position: 'absolute',
-    top: scaleHeight(53),
-    left: scaleWidth(30),
     fontFamily: 'Poppins',
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: scaleWidth(20),
     color: '#18302A',
+    marginBottom: scaleHeight(8),
   },
   verificationText: {
-    position: 'absolute',
-    top: scaleHeight(110),
-    left: scaleWidth(30),
     fontFamily: 'Poppins-Medium',
     fontSize: scaleWidth(13),
     color: '#18302A',
+    marginBottom: scaleHeight(24),
   },
   boldText: {
     fontFamily: 'Poppins-Bold',
   },
+  inputContainer: {
+    marginBottom: scaleHeight(24),
+  },
   input: {
-    width: scaleWidth(300),
+    width: '100%',
     paddingVertical: scaleWidth(16),
     paddingLeft: scaleWidth(16),
     textAlign: 'left',
@@ -99,8 +146,6 @@ const styles = StyleSheet.create({
     lineHeight: undefined, // normal
     borderRadius: scaleWidth(5),
     fontSize: scaleWidth(14), // default to active size
-    marginTop: scaleHeight(196),
-    marginBottom: scaleHeight(24),
     backgroundColor: '#FFF',
     borderWidth: 1,
   },
@@ -120,8 +165,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   nextButton: {
-    alignSelf: 'center',
-    marginTop: scaleHeight(40),
+    marginTop: scaleHeight(24),
+    width: '100%',
   },
   legalCopy: {
     color: '#18302A',
@@ -130,7 +175,7 @@ const styles = StyleSheet.create({
     fontStyle: 'normal',
     fontWeight: '400',
     lineHeight: scaleHeight(19.236),
-    marginTop: 0,
+    marginBottom: scaleHeight(8),
   },
   legalLink: {
     textDecorationLine: 'underline',

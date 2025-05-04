@@ -4,6 +4,9 @@ import {
   Text,
   TextInput,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
@@ -43,78 +46,91 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>ENTER CODE</Text>
-      <Text style={styles.verificationText}>
-        Please enter the 5-digit verification code we sent to your email address.
-      </Text>
-      <View style={styles.codeInputRow}>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.codeBoxWrapper}>
-            <TextInput
-              ref={inputRefs.current[i]}
-              style={[
-                styles.codeBox,
-                code[i] ? styles.codeBoxFilled : null,
-                code.length === 5 ? styles.codeBoxAllFilled : null,
-              ]}
-              value={code[i] || ''}
-              onChangeText={text => handleCodeChange(text, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              returnKeyType="next"
-              textAlign="center"
-              textAlignVertical="center"
-              placeholder=""
-              selectionColor="#18302A"
-              autoFocus={i === 0}
-            />
-          </View>
-        ))}
-      </View>
-      <PrimaryButton
-        title="Next"
-        onPress={onNext}
-        isActive={isValidCode}
-        style={styles.nextButton}
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={scaleHeight(35)}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.header}>ENTER CODE</Text>
+        <Text style={styles.verificationText}>
+          Please enter the 5-digit verification code we sent to your email address.
+        </Text>
+        <View style={styles.codeInputRow}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View key={i} style={styles.codeBoxWrapper}>
+              <TextInput
+                ref={inputRefs.current[i]}
+                style={[
+                  styles.codeBox,
+                  code[i] ? styles.codeBoxFilled : null,
+                  code.length === 5 ? styles.codeBoxAllFilled : null,
+                ]}
+                value={code[i] || ''}
+                onChangeText={text => handleCodeChange(text, i)}
+                keyboardType="number-pad"
+                maxLength={1}
+                returnKeyType="next"
+                textAlign="center"
+                textAlignVertical="center"
+                placeholder=""
+                selectionColor="#18302A"
+                autoFocus={i === 0}
+              />
+            </View>
+          ))}
+        </View>
+        <PrimaryButton
+          title="Next"
+          onPress={onNext}
+          isActive={isValidCode}
+          style={styles.nextButton}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: scaleWidth(24),
+    paddingTop: scaleHeight(53),
+    paddingBottom: scaleHeight(40),
+  },
   container: {
     flex: 1,
-    paddingHorizontal: scaleWidth(24),
+    // No paddingHorizontal here, handled by scrollContent
   },
   header: {
-    position: 'absolute',
-    top: scaleHeight(53),
-    left: scaleWidth(30),
     fontFamily: 'Poppins',
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: scaleWidth(20),
     color: '#18302A',
+    marginBottom: scaleHeight(8),
   },
   verificationText: {
-    position: 'absolute',
-    top: scaleHeight(110),
-    left: scaleWidth(30),
     fontFamily: 'Poppins-Medium',
     fontSize: scaleWidth(13),
     color: '#18302A',
+    marginBottom: scaleHeight(24),
   },
   codeInputRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: scaleWidth(10),
-    marginTop: scaleHeight(196),
+    width: '100%',
     marginBottom: scaleHeight(24),
   },
   codeBox: {
-    width: scaleWidth(50),
+    flex: 1,
+    minWidth: scaleWidth(44),
+    maxWidth: scaleWidth(60),
     height: scaleWidth(50),
     borderRadius: scaleWidth(8),
     backgroundColor: '#FFF',
@@ -128,6 +144,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: '900',
     flexShrink: 0,
+    marginHorizontal: scaleWidth(2),
   },
   codeBoxFilled: {
     backgroundColor: '#9BA19C',
@@ -136,13 +153,15 @@ const styles = StyleSheet.create({
     borderColor: '#4EDD69',
   },
   codeBoxWrapper: {
-    width: scaleWidth(50),
+    flex: 1,
+    minWidth: scaleWidth(44),
+    maxWidth: scaleWidth(60),
     height: scaleWidth(50),
     justifyContent: 'center',
     alignItems: 'center',
   },
   nextButton: {
-    alignSelf: 'center',
-    marginTop: scaleHeight(40),
+    marginTop: scaleHeight(24),
+    width: '100%',
   },
 }); 
