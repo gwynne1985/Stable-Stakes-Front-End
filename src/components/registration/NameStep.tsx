@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -26,9 +26,15 @@ export const NameStep: React.FC<NameStepProps> = ({
   onLastNameChange,
   onNext,
 }) => {
+  const [firstNameBlurred, setFirstNameBlurred] = useState(false);
+  const [lastNameBlurred, setLastNameBlurred] = useState(false);
+
   const isFormValid = () => {
     return (firstName?.length ?? 0) > 0 && (lastName?.length ?? 0) > 0;
   };
+
+  const isFirstNameValid = firstNameBlurred && (firstName?.length ?? 0) > 0;
+  const isLastNameValid = lastNameBlurred && (lastName?.length ?? 0) > 0;
 
   return (
     <KeyboardAvoidingView
@@ -43,21 +49,30 @@ export const NameStep: React.FC<NameStepProps> = ({
       >
         <Text style={styles.header}>YOUR NAME</Text>
         <Text style={styles.bodyText}>
-          Let us know what you like to be called so we can personalise your app experience.
+          Let us know what you like to be called so we{"\n"}
+          can personalise your app experience.{"\n"}
+          <Text style={{ color: '#E3E3E3' }}>…………..</Text>
         </Text>
         <View style={styles.fieldsContainer}>
-          <InputField
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={onFirstNameChange}
-            style={styles.input}
-          />
-          <InputField
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={onLastNameChange}
-            style={styles.input}
-          />
+          <View style={{ marginBottom: scaleHeight(16) }}>
+            <InputField
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={onFirstNameChange}
+              onBlur={() => setFirstNameBlurred(true)}
+              isValid={isFirstNameValid}
+            />
+          </View>
+          <View>
+            <InputField
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={onLastNameChange}
+              onBlur={() => setLastNameBlurred(true)}
+              isValid={isLastNameValid}
+            />
+          </View>
+          <View style={{ minHeight: scaleHeight(12), marginBottom: scaleHeight(16) }} />
         </View>
         <PrimaryButton
           title="Next"
@@ -92,7 +107,8 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   fieldsContainer: {
-    marginBottom: scaleHeight(24),
+    marginBottom: 0,
+    width: '100%',
   },
   input: {
     width: '100%',
@@ -109,10 +125,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(96, 133, 123, 0.50)',
     color: 'rgba(96, 133, 123, 0.50)',
-    marginBottom: scaleHeight(16),
   },
   nextButton: {
     width: '100%',
-    marginTop: scaleHeight(24),
+    marginTop: scaleHeight(10),
   },
 }); 

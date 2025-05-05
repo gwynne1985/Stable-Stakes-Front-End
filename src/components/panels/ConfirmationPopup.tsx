@@ -5,6 +5,7 @@ import { PrimaryButton } from '../PrimaryButton';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../navigation';
+import * as Haptics from 'expo-haptics';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -61,6 +62,7 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
   // Animate circles when complete
   useEffect(() => {
     if (complete) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Animated.spring(bigCircleScale, {
         toValue: 1,
         useNativeDriver: true,

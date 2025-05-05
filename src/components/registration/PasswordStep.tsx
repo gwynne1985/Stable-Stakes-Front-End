@@ -18,14 +18,30 @@ interface PasswordStepProps {
 export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
   const [isValid, setIsValid] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Password validation logic (should match PasswordFields logic)
+  const isValidPassword = (pw: string) => {
+    const hasMinLength = pw.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(pw);
+    const hasNumber = /[0-9]/.test(pw);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(pw);
+    const hasNoSpaces = !/\s/.test(pw);
+    return hasMinLength && hasUpperCase && hasNumber && hasSpecialChar && hasNoSpaces;
+  };
+
+  const updateIsValid = (pw: string, confirm: string) => {
+    setIsValid(isValidPassword(pw) && pw === confirm && pw.length > 0);
+  };
 
   const handlePasswordChange = (newPassword: string) => {
     setPassword(newPassword);
-    setIsValid(true);
+    updateIsValid(newPassword, confirmPassword);
   };
 
-  const handleConfirmPasswordChange = (confirmPassword: string) => {
-    // Additional validation if needed
+  const handleConfirmPasswordChange = (newConfirm: string) => {
+    setConfirmPassword(newConfirm);
+    updateIsValid(password, newConfirm);
   };
 
   return (
@@ -48,6 +64,9 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
             onPasswordChange={handlePasswordChange}
             onConfirmPasswordChange={handleConfirmPasswordChange}
             shouldValidate={true}
+            passwordTextContentType="newPassword"
+            confirmPasswordTextContentType="newPassword"
+            onValidityChange={setIsValid}
           />
         </View>
         <PrimaryButton
@@ -86,11 +105,11 @@ const styles = StyleSheet.create({
     marginBottom: scaleHeight(24),
   },
   fieldsContainer: {
-    marginBottom: scaleHeight(24),
+    marginBottom: 0,
     width: '100%',
   },
   nextButton: {
     width: '100%',
-    marginTop: scaleHeight(24),
+    marginTop: 0,
   },
 }); 

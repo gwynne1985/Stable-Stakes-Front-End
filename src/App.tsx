@@ -6,6 +6,7 @@ import { LoadingScreen } from './screens/Loading';
 import { LoginScreen } from './screens/Login';
 import { TabNavigator } from './navigation/TabNavigator';
 import { RootStackParamList } from './navigation';
+import PasswordStrongTest from './components/registration/PasswordStrongTest';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -22,6 +23,8 @@ export default function App() {
           <Stack.Screen name="Loading" component={LoadingScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="MainApp" component={TabNavigator} />
+          <Stack.Screen name="PasswordStrongTest" component={PasswordStrongTest} />
+          <Stack.Screen name="Registration" component={require('./screens/Registration').RegistrationScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

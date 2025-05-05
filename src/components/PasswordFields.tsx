@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, ViewStyle, TextStyle, TouchableOpacity, Image, TextInputProps } from 'react-native';
 import { InputField } from './InputField';
 import { scaleWidth, scaleHeight } from '../utils/scale';
 
@@ -7,15 +7,22 @@ interface PasswordFieldsProps {
   onPasswordChange: (password: string) => void;
   shouldValidate?: boolean;
   onConfirmPasswordChange: (password: string) => void;
+  passwordTextContentType?: TextInputProps['textContentType'];
+  confirmPasswordTextContentType?: TextInputProps['textContentType'];
+  onValidityChange?: (isValidAndMatching: boolean) => void;
 }
 
 export const PasswordFields: React.FC<PasswordFieldsProps> = ({ 
   onPasswordChange, 
   shouldValidate = false,
-  onConfirmPasswordChange 
+  onConfirmPasswordChange,
+  passwordTextContentType = 'newPassword',
+  confirmPasswordTextContentType = 'newPassword',
+  onValidityChange,
 }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isPasswordBlurred, setIsPasswordBlurred] = useState(false);
   const [isConfirmPasswordBlurred, setIsConfirmPasswordBlurred] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
 
@@ -31,6 +38,12 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
   const passwordsMatch = useMemo(() => {
     return password === confirmPassword && password.length > 0;
   }, [password, confirmPassword]);
+
+  useEffect(() => {
+    if (onValidityChange) {
+      onValidityChange(isValidPassword && passwordsMatch);
+    }
+  }, [isValidPassword, passwordsMatch, onValidityChange]);
 
   const shouldShowValidation = shouldValidate || isConfirmPasswordBlurred;
 
@@ -64,7 +77,6 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
       fontSize: scaleWidth(14),
       backgroundColor: '#FFF',
       borderWidth: 1,
-      marginBottom: scaleHeight(16),
     };
     
     if (password.length > 0) {
@@ -118,15 +130,34 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
     };
   };
 
+  // Border color logic for password field
+  const passwordFieldBorderColor = () => {
+    if (isValidPassword) return '#4EDD69'; // green if valid
+    if (isPasswordBlurred && password.length > 0 && !isValidPassword) return '#FE606E'; // red if blurred and invalid
+    return 'rgba(96, 133, 123, 0.50)'; // default
+  };
+
+  // Border color logic for confirm password field
+  const confirmPasswordFieldBorderColor = () => {
+    if (passwordsMatch && confirmPassword.length > 0) return '#4EDD69'; // green if matches
+    if (isConfirmPasswordBlurred && confirmPassword.length > 0 && !passwordsMatch) return '#FE606E'; // red if blurred and does not match
+    return 'rgba(96, 133, 123, 0.50)'; // default
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.passwordContainer}>
+      <View style={[styles.passwordContainer, { marginBottom: scaleHeight(16) }]}>
         <InputField
           placeholder="Choose password"
           value={password}
           onChangeText={handlePasswordChange}
           secureTextEntry={!showPasswords}
-          style={getPasswordFieldStyle(isValidPassword)}
+          style={[
+            getPasswordFieldStyle(isValidPassword),
+            { borderColor: passwordFieldBorderColor() },
+          ] as any}
+          textContentType={passwordTextContentType}
+          onBlur={() => setIsPasswordBlurred(true)}
         />
         <TouchableOpacity 
           style={styles.eyeIcon} 
@@ -146,7 +177,11 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
           onChangeText={handleConfirmPasswordChange}
           onBlur={() => setIsConfirmPasswordBlurred(true)}
           secureTextEntry={!showPasswords}
-          style={getConfirmPasswordFieldStyle(passwordsMatch)}
+          style={[
+            getConfirmPasswordFieldStyle(passwordsMatch),
+            { borderColor: confirmPasswordFieldBorderColor() },
+          ] as any}
+          textContentType={confirmPasswordTextContentType}
         />
         <TouchableOpacity 
           style={styles.eyeIcon} 
@@ -159,9 +194,16 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
         </TouchableOpacity>
       </View>
 
-      {shouldShowValidation && ((password.length > 0 && !isValidPassword) || (confirmPassword.length > 0 && !passwordsMatch)) ? (
-        <Text style={styles.errorText}>Invalid password/Password do not match</Text>
-      ) : null}
+      {/* Single error message area for both errors */}
+      <View style={{ minHeight: scaleHeight(12), justifyContent: 'center' }}>
+        {isPasswordBlurred && password.length > 0 && !isValidPassword ? (
+          <Text style={styles.errorText}>Invalid password</Text>
+        ) : isConfirmPasswordBlurred && password.length > 0 && isValidPassword && confirmPassword.length > 0 && !passwordsMatch ? (
+          <Text style={styles.errorText}>Passwords do not match</Text>
+        ) : (
+          <Text style={[styles.errorText, { color: 'transparent' }]}>.</Text>
+        )}
+      </View>
     </View>
   );
 };
@@ -178,8 +220,10 @@ const styles = StyleSheet.create({
   eyeIcon: {
     position: 'absolute',
     right: scaleWidth(10),
-    top: '50%',
-    transform: [{ translateY: -scaleHeight(14.5) }],
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: scaleWidth(5),
   },
   eyeIconImage: {

@@ -296,6 +296,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: scaleWidth(30),
     top: scaleHeight(334),
+    width: scaleWidth(300),
   },
   passwordContainer: {
     position: 'absolute',

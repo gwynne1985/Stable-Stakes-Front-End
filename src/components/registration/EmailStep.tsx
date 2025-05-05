@@ -26,6 +26,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 }) => {
   const [isValidEmail, setIsValidEmail] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [blurFired, setBlurFired] = useState(false);
   const typingTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Debounced validation
@@ -43,21 +44,16 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 
   const handleChange = (text: string) => {
     onEmailChange(text);
-    setShowValidation(false);
-    setIsValidEmail(false);
-    if (typingTimeout.current) clearTimeout(typingTimeout.current);
-    typingTimeout.current = setTimeout(() => {
-      setShowValidation(true);
-      setIsValidEmail(emailRegex.test(text));
-    }, 500);
   };
 
   const handleBlur = () => {
     setShowValidation(true);
     setIsValidEmail(emailRegex.test(email));
+    setBlurFired(true);
   };
 
   const shouldShowError = showValidation && email.length > 0 && !isValidEmail;
+  const shouldShowValid = showValidation && email.length > 0 && isValidEmail;
 
   return (
     <KeyboardAvoidingView
@@ -85,7 +81,9 @@ export const EmailStep: React.FC<EmailStepProps> = ({
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            textContentType="emailAddress"
             isInvalid={shouldShowError}
+            isValid={shouldShowValid}
             errorMessage={shouldShowError ? 'Enter a valid email' : undefined}
           />
         </View>

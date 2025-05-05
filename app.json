@@ -46,6 +46,11 @@
       "tsconfigPaths": true
     },
     "jsEngine": "hermes",
-    "newArchEnabled": true
+    "newArchEnabled": true,
+    "extra": {
+      "eas": {
+        "projectId": "a3ca6c49-e9e6-4e92-b070-0697981a45ff"
+      }
+    }
   }
-} 
+}

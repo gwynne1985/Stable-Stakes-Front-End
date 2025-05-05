@@ -14,6 +14,7 @@ export const ProShopScreen = () => {
     image: any;
   } | null>(null);
   const [isClubRedemptionVisible, setIsClubRedemptionVisible] = useState(false);
+  const [isClubInfoVisible, setIsClubInfoVisible] = useState(false);
 
   const handleRetailerSelect = (retailer: { name: string; image: any }) => {
     console.log('Retailer selected:', retailer.name);
@@ -23,6 +24,7 @@ export const ProShopScreen = () => {
   const handleCloseRedemption = () => {
     console.log('Closing redemption panel');
     setSelectedRetailer(null);
+    setIsClubRedemptionVisible(false);
   };
 
   const handleVoucherConfirm = (amount: number, onConfirm: () => void) => {
@@ -32,12 +34,16 @@ export const ProShopScreen = () => {
       hasOnConfirm: !!onConfirm
     });
     
-    if (selectedRetailer && onConfirm) {
+    if (onConfirm) {
       onConfirm();
     }
   };
 
   const handleInfoIconPress = () => {
+    setIsClubInfoVisible(true);
+  };
+
+  const handleVoucherPress = () => {
     setIsClubRedemptionVisible(true);
   };
 
@@ -53,7 +59,10 @@ export const ProShopScreen = () => {
             <View style={styles.topContainer}>
               <AvailableToSpend amount={888.00} />
               <View style={styles.spacer} />
-              <SupportYourClub onInfoPress={handleInfoIconPress} />
+              <SupportYourClub 
+                onInfoPress={handleInfoIconPress}
+                onVoucherPress={handleVoucherPress}
+              />
               <View style={styles.spacer30} />
               <Text style={styles.otherRetailersTitle}>OTHER RETAILERS</Text>
               <View style={styles.spacer} />
@@ -77,9 +86,23 @@ export const ProShopScreen = () => {
         onClose={handleCloseRedemption}
         onVoucherConfirm={handleVoucherConfirm}
       />
-      <ClubRedemptionPanel
+
+      <RetailerRedemptionPanel
         isVisible={isClubRedemptionVisible}
-        onClose={() => setIsClubRedemptionVisible(false)}
+        clubName="Golf Club Name"
+        descriptionText="Select your voucher amount below. Once confirmed, your voucher will be sent to your registered email address."
+        voucherRangeText="Voucher Amount: £20 - £500"
+        termsContent="Terms and conditions for club pro shop vouchers:\n\n1. Vouchers are valid for 12 months from the date of issue\n2. Cannot be exchanged for cash\n3. Must be redeemed in a single transaction\n4. Any remaining balance will be forfeited"
+        minAmount={20}
+        maxAmount={500}
+        remainingBalance={888.00}
+        onClose={handleCloseRedemption}
+        onVoucherConfirm={handleVoucherConfirm}
+      />
+
+      <ClubRedemptionPanel
+        isVisible={isClubInfoVisible}
+        onClose={() => setIsClubInfoVisible(false)}
       />
     </>
   );

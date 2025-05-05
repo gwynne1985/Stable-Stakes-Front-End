@@ -1,12 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
+import { InfoBottomSheet } from '../panels/InfoBottomSheet';
 
 interface ChdIdStepProps {
   chdId: string;
@@ -20,8 +22,11 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
   onNext,
 }) => {
   const isValidChdId = useMemo(() => {
-    return chdId.trim().length > 0;
+    return /^\d{10}$/.test(chdId.trim());
   }, [chdId]);
+
+  const [blurred, setBlurred] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -36,19 +41,33 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
             ? styles.inputInactive
             : isValidChdId
             ? styles.inputValid
-            : styles.inputInvalid,
+            : blurred && chdId.length > 0
+            ? styles.inputInvalid
+            : null,
         ]}
         value={chdId}
         onChangeText={onChdIdChange}
         placeholder="CHD ID"
         placeholderTextColor="rgba(96, 133, 123, 0.50)"
         autoCapitalize="characters"
+        keyboardType="number-pad"
+        maxLength={10}
+        onBlur={() => setBlurred(true)}
       />
       <PrimaryButton
         title="Next"
         onPress={onNext}
         isActive={isValidChdId}
         style={styles.nextButton}
+      />
+      <TouchableOpacity onPress={() => setInfoVisible(true)} activeOpacity={0.7} style={styles.helpContainer}>
+        <Text style={styles.helpText}>Help me find it</Text>
+      </TouchableOpacity>
+      <InfoBottomSheet
+        isVisible={infoVisible}
+        onClose={() => setInfoVisible(false)}
+        title="CHD LIFETIME ID"
+        content={"Your CHD lifetime ID, also known as your Membership number, is a unique 10-digit code used to track your golf handicap across clubs and competitions. You can find in golf apps like England Golf or IG Member."}
       />
     </View>
   );
@@ -58,39 +77,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: scaleWidth(24),
+    paddingTop: scaleHeight(53),
   },
   header: {
-    position: 'absolute',
-    top: scaleHeight(53),
-    left: scaleWidth(30),
     fontFamily: 'Poppins',
     fontStyle: 'italic',
     fontWeight: '900',
     fontSize: scaleWidth(20),
     color: '#18302A',
+    marginBottom: scaleHeight(8),
   },
   verificationText: {
-    position: 'absolute',
-    top: scaleHeight(110),
-    left: scaleWidth(30),
     fontFamily: 'Poppins-Medium',
     fontSize: scaleWidth(13),
     color: '#18302A',
+    marginBottom: scaleHeight(24),
   },
   input: {
-    width: scaleWidth(300),
+    width: '100%',
     padding: scaleWidth(16),
-    alignItems: 'center',
     fontFamily: 'Poppins',
     fontStyle: 'normal',
     fontWeight: '500',
     lineHeight: undefined, // normal
     borderRadius: scaleWidth(5),
     fontSize: scaleWidth(14), // default to active size
-    marginTop: scaleHeight(196),
     marginBottom: scaleHeight(24),
     backgroundColor: '#FFF',
     borderWidth: 1,
+    borderColor: '#CCC',
   },
   inputInactive: {
     color: 'rgba(96, 133, 123, 0.50)',
@@ -108,7 +123,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   nextButton: {
-    alignSelf: 'center',
+    width: '100%',
     marginTop: scaleHeight(40),
+  },
+  helpContainer: {
+    alignItems: 'center',
+    marginTop: scaleHeight(16),
+  },
+  helpText: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(13),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(20.839),
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'solid',
   },
 }); 

@@ -12,4 +12,5 @@ export type RootStackParamList = {
   Login: undefined;
   MainApp: NavigatorScreenParams<TabParamList>;
   Registration: undefined;
+  PasswordStrongTest: undefined;
 }; 

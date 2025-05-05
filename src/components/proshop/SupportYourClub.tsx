@@ -4,9 +4,10 @@ import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 interface SupportYourClubProps {
   onInfoPress?: () => void;
+  onVoucherPress?: () => void;
 }
 
-export const SupportYourClub: React.FC<SupportYourClubProps> = ({ onInfoPress }) => {
+export const SupportYourClub: React.FC<SupportYourClubProps> = ({ onInfoPress, onVoucherPress }) => {
   return (
     <ImageBackground 
       source={require('../../../assets/images/golf-course.jpg')}
@@ -25,9 +26,9 @@ export const SupportYourClub: React.FC<SupportYourClubProps> = ({ onInfoPress })
         <Text style={styles.titleText}>YOUR</Text>
         <Text style={styles.titleText}>CLUB</Text>
       </View>
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={onVoucherPress}>
         <View style={styles.buttonTextContainer}>
-          <Text style={styles.buttonText}>GET PRO SHOP VOUCHERS</Text>
+          <Text style={styles.buttonText}>Get Pro Shop Vouchers</Text>
         </View>
       </TouchableOpacity>
     </ImageBackground>
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     borderWidth: 1.5,
     borderColor: '#4EDD69',
-    backgroundColor: '#F0F2F2',
+    backgroundColor: '#4EDD69',
   },
   buttonTextContainer: {
     flex: 1,
@@ -99,6 +100,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: '800',
     letterSpacing: -0.84,
-    textTransform: 'uppercase',
+    textTransform: 'none',
   },
 }); 

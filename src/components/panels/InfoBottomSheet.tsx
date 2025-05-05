@@ -189,10 +189,10 @@ const styles = StyleSheet.create({
   },
   content: {
     marginTop: scaleHeight(20),
-    width: scaleWidth(317),
+    width: scaleWidth(300),
     color: '#18302A',
     fontFamily: 'Poppins-Medium',
-    fontSize: scaleWidth(12),
+    fontSize: scaleWidth(13),
     textAlign: 'center',
   },
   buttonContainer: {

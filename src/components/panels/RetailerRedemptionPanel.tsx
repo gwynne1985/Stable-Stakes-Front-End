@@ -37,6 +37,8 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
   const [remainingBalance, setRemainingBalance] = useState(initialRemainingBalance);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  const isClubRedemption = !retailerLogo;
+
   const handleIncrement = () => {
     const nextAmount = amount + 10;
     if (nextAmount <= maxAmount) {
@@ -111,7 +113,9 @@ export const RetailerRedemptionPanel: React.FC<RetailerRedemptionPanelProps> = (
               onPress={() => setShowTerms(true)}
               style={styles.infoLink}
             >
-              <Text style={styles.infoLinkText}>Voucher Information</Text>
+              <Text style={styles.infoLinkText}>
+                {isClubRedemption ? 'View Terms and Conditions' : 'Voucher Information'}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.amountSelector}>
@@ -206,10 +210,15 @@ const styles = StyleSheet.create({
     marginTop: scaleHeight(20),
   },
   clubName: {
-    fontFamily: 'Poppins',
-    fontSize: scaleWidth(24),
-    fontWeight: '700',
     color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(20),
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: undefined,
+    letterSpacing: scaleWidth(-1.2),
+    textTransform: 'uppercase',
     marginTop: scaleHeight(20),
   },
   description: {

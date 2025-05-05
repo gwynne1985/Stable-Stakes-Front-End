@@ -15,6 +15,7 @@ import { Portal } from '@gorhom/portal';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { SmallBackButton } from '../SmallBackButton';
 import { SmallConfirmButton } from '../SmallConfirmButton';
+import * as Haptics from 'expo-haptics';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PANEL_HEIGHT = scaleHeight(737);
@@ -36,6 +37,7 @@ export const VoucherPanel: React.FC<VoucherPanelProps> = ({
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const panY = useRef(new Animated.Value(0)).current as Animated.Value;
+  const hasCrossedThresholdRef = useRef(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -49,10 +51,18 @@ export const VoucherPanel: React.FC<VoucherPanelProps> = ({
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
+          if (!hasCrossedThresholdRef.current && gestureState.dy > SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = true;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else if (hasCrossedThresholdRef.current && gestureState.dy <= SWIPE_THRESHOLD) {
+            hasCrossedThresholdRef.current = false;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         panY.flattenOffset();
+        hasCrossedThresholdRef.current = false;
         if (gestureState.dy > SWIPE_THRESHOLD) {
           Animated.timing(slideAnim, {
             toValue: SCREEN_HEIGHT,
