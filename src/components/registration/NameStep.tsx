@@ -47,39 +47,43 @@ export const NameStep: React.FC<NameStepProps> = ({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header}>YOUR NAME</Text>
-        <Text style={styles.bodyText}>
-          Let us know what you like to be called so we{"\n"}
-          can personalise your app experience.{"\n"}
-          <Text style={{ color: '#E3E3E3' }}>…………..</Text>
-        </Text>
-        <View style={styles.fieldsContainer}>
-          <View style={{ marginBottom: scaleHeight(16) }}>
-            <InputField
-              placeholder="First Name"
-              value={firstName}
-              onChangeText={onFirstNameChange}
-              onBlur={() => setFirstNameBlurred(true)}
-              isValid={isFirstNameValid}
-            />
+        <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+          <Text style={styles.header}>YOUR NAME</Text>
+          <Text style={styles.bodyText}>
+            Let us know what you like to be called so we{"\n"}
+            can personalise your app experience.{"\n"}
+            <Text style={{ color: '#E3E3E3' }}>…………..</Text>
+          </Text>
+          <View style={styles.fieldsContainer}>
+            <View style={{ marginBottom: scaleHeight(16) }}>
+              <InputField
+                placeholder="First Name"
+                value={firstName}
+                onChangeText={onFirstNameChange}
+                onBlur={() => setFirstNameBlurred(true)}
+                isValid={isFirstNameValid}
+                autoCapitalize="words"
+              />
+            </View>
+            <View>
+              <InputField
+                placeholder="Last Name"
+                value={lastName}
+                onChangeText={onLastNameChange}
+                onBlur={() => setLastNameBlurred(true)}
+                isValid={isLastNameValid}
+                autoCapitalize="words"
+              />
+            </View>
+            <View style={{ minHeight: scaleHeight(12), marginBottom: scaleHeight(16) }} />
           </View>
-          <View>
-            <InputField
-              placeholder="Last Name"
-              value={lastName}
-              onChangeText={onLastNameChange}
-              onBlur={() => setLastNameBlurred(true)}
-              isValid={isLastNameValid}
-            />
-          </View>
-          <View style={{ minHeight: scaleHeight(12), marginBottom: scaleHeight(16) }} />
+          <PrimaryButton
+            title="Next"
+            onPress={onNext}
+            isActive={isFormValid()}
+            style={styles.nextButton}
+          />
         </View>
-        <PrimaryButton
-          title="Next"
-          onPress={onNext}
-          isActive={isFormValid()}
-          style={styles.nextButton}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

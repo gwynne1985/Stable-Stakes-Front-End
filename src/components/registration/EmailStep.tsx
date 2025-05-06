@@ -44,11 +44,11 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 
   const handleChange = (text: string) => {
     onEmailChange(text);
+    setIsValidEmail(emailRegex.test(text));
   };
 
   const handleBlur = () => {
     setShowValidation(true);
-    setIsValidEmail(emailRegex.test(email));
     setBlurFired(true);
   };
 
@@ -66,38 +66,42 @@ export const EmailStep: React.FC<EmailStepProps> = ({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header}>ENTER EMAIL</Text>
-        <Text style={styles.verificationText}>
-          We'll send a <Text style={styles.boldText}>verification code</Text> to your Inbox to confirm your email address.
-        </Text>
-        <View style={styles.inputContainer}>
-          <InputField
-            style={styles.input}
-            value={email}
-            onChangeText={handleChange}
-            onBlur={handleBlur}
-            placeholder="Email"
-            placeholderTextColor="rgba(96, 133, 123, 0.50)"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            textContentType="emailAddress"
-            isInvalid={shouldShowError}
-            isValid={shouldShowValid}
-            errorMessage={shouldShowError ? 'Enter a valid email' : undefined}
+        <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+          <Text style={styles.header}>ENTER EMAIL</Text>
+          <Text style={styles.verificationText}>
+            We'll send a verification codeto your Inbox to confirm your email address.
+          </Text>
+          <View style={styles.inputContainer}>
+            <InputField
+              style={styles.input}
+              value={email}
+              onChangeText={handleChange}
+              onBlur={handleBlur}
+              placeholder="Email"
+              placeholderTextColor="rgba(96, 133, 123, 0.50)"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
+              autoCorrect={false}
+              spellCheck={false}
+              isInvalid={shouldShowError}
+              isValid={isValidEmail}
+              errorMessage={shouldShowError ? 'Enter a valid email' : undefined}
+            />
+          </View>
+          <Text style={styles.legalCopy}>
+            By continuing, I agree to Stable Stakes{' '}
+            <Text style={styles.legalLink}>Privacy Policy</Text> and{' '}
+            <Text style={styles.legalLink}>Terms of Use</Text>.
+          </Text>
+          <PrimaryButton
+            title="Next"
+            onPress={onNext}
+            isActive={isValidEmail}
+            style={styles.nextButton}
           />
         </View>
-        <Text style={styles.legalCopy}>
-          By continuing, I agree to Stable Stakes{' '}
-          <Text style={styles.legalLink}>Privacy Policy</Text> and{' '}
-          <Text style={styles.legalLink}>Terms of Use</Text>.
-        </Text>
-        <PrimaryButton
-          title="Next"
-          onPress={onNext}
-          isActive={isValidEmail}
-          style={styles.nextButton}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -135,13 +139,13 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    paddingVertical: scaleWidth(16),
+    paddingVertical: scaleHeight(14),
     paddingLeft: scaleWidth(16),
     textAlign: 'left',
     fontFamily: 'Poppins',
     fontStyle: 'normal',
     fontWeight: '500',
-    lineHeight: undefined, // normal
+    lineHeight: scaleWidth(18),
     borderRadius: scaleWidth(5),
     fontSize: scaleWidth(14), // default to active size
     backgroundColor: '#FFF',

@@ -55,26 +55,28 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header}>CREATE PASSWORD</Text>
-        <Text style={styles.instructions}>
-          Minimum 8 characters, including an uppercase letter, number, and special character. No spaces.
-        </Text>
-        <View style={styles.fieldsContainer}>
-          <PasswordFields
-            onPasswordChange={handlePasswordChange}
-            onConfirmPasswordChange={handleConfirmPasswordChange}
-            shouldValidate={true}
-            passwordTextContentType="newPassword"
-            confirmPasswordTextContentType="newPassword"
-            onValidityChange={setIsValid}
+        <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+          <Text style={styles.header}>CREATE PASSWORD</Text>
+          <Text style={styles.instructions}>
+            Minimum 8 characters, including an uppercase letter, number, and special character. No spaces.
+          </Text>
+          <View style={styles.fieldsContainer}>
+            <PasswordFields
+              onPasswordChange={handlePasswordChange}
+              onConfirmPasswordChange={handleConfirmPasswordChange}
+              shouldValidate={true}
+              passwordTextContentType="newPassword"
+              confirmPasswordTextContentType="newPassword"
+              onValidityChange={setIsValid}
+            />
+          </View>
+          <PrimaryButton
+            title="Next"
+            onPress={() => onNext(password)}
+            isActive={isValid}
+            style={styles.nextButton}
           />
         </View>
-        <PrimaryButton
-          title="Next"
-          onPress={() => onNext(password)}
-          isActive={isValid}
-          style={styles.nextButton}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

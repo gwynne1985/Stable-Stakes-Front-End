@@ -56,40 +56,42 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header}>ENTER CODE</Text>
-        <Text style={styles.verificationText}>
-          Please enter the 5-digit verification code we sent to your email address.
-        </Text>
-        <View style={styles.codeInputRow}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <View key={i} style={styles.codeBoxWrapper}>
-              <TextInput
-                ref={inputRefs.current[i]}
-                style={[
-                  styles.codeBox,
-                  code[i] ? styles.codeBoxFilled : null,
-                  code.length === 5 ? styles.codeBoxAllFilled : null,
-                ]}
-                value={code[i] || ''}
-                onChangeText={text => handleCodeChange(text, i)}
-                keyboardType="number-pad"
-                maxLength={1}
-                returnKeyType="next"
-                textAlign="center"
-                textAlignVertical="center"
-                placeholder=""
-                selectionColor="#18302A"
-                autoFocus={i === 0}
-              />
-            </View>
-          ))}
+        <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+          <Text style={styles.header}>ENTER CODE</Text>
+          <Text style={styles.verificationText}>
+            Please enter the 5-digit verification code we sent to your email address.
+          </Text>
+          <View style={styles.codeInputRow}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <View key={i} style={styles.codeBoxWrapper}>
+                <TextInput
+                  ref={inputRefs.current[i]}
+                  style={[
+                    styles.codeBox,
+                    code[i] ? styles.codeBoxFilled : null,
+                    code.length === 5 ? styles.codeBoxAllFilled : null,
+                  ]}
+                  value={code[i] || ''}
+                  onChangeText={text => handleCodeChange(text, i)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  returnKeyType="next"
+                  textAlign="center"
+                  textAlignVertical="center"
+                  placeholder=""
+                  selectionColor="#18302A"
+                  autoFocus={i === 0}
+                />
+              </View>
+            ))}
+          </View>
+          <PrimaryButton
+            title="Next"
+            onPress={onNext}
+            isActive={isValidCode}
+            style={styles.nextButton}
+          />
         </View>
-        <PrimaryButton
-          title="Next"
-          onPress={onNext}
-          isActive={isValidCode}
-          style={styles.nextButton}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

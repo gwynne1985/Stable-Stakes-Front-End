@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  TextInput,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
-import { InputField } from '../InputField';
 
 interface DobStepProps {
   onNext: () => void;
@@ -19,8 +19,15 @@ export const DobStep: React.FC<DobStepProps> = ({
   const [day, setDay] = React.useState('');
   const [month, setMonth] = React.useState('');
   const [year, setYear] = React.useState('');
-  const [blurred, setBlurred] = React.useState(false);
+  const [dayBlurred, setDayBlurred] = React.useState(false);
+  const [monthBlurred, setMonthBlurred] = React.useState(false);
+  const [yearBlurred, setYearBlurred] = React.useState(false);
   const [error, setError] = React.useState('');
+
+  // Refs for each input
+  const dayRef = useRef<TextInput>(null);
+  const monthRef = useRef<TextInput>(null);
+  const yearRef = useRef<TextInput>(null);
 
   // Helper: check if all fields are filled and numeric
   const isFilled = day.length === 2 && month.length === 2 && year.length === 4;
@@ -51,12 +58,8 @@ export const DobStep: React.FC<DobStepProps> = ({
     return age >= 18;
   }
 
-  // Validation logic
+  // Validation logic: always update error based on current values
   React.useEffect(() => {
-    if (!blurred) {
-      setError('');
-      return;
-    }
     if (!isFilled || !isNumeric) {
       setError('Invalid date');
       return;
@@ -70,78 +73,92 @@ export const DobStep: React.FC<DobStepProps> = ({
       return;
     }
     setError('');
-  }, [day, month, year, blurred]);
+  }, [day, month, year, isFilled, isNumeric]);
 
   // Border color logic
   const getBorderColor = () => {
-    if (!blurred) return '#CCC';
-    if (error) return '#FE606E';
+    const anyFieldBlurred = dayBlurred || monthBlurred || yearBlurred;
+    if (anyFieldBlurred && isFilled && error) return '#FE606E';
     if (isFilled && isNumeric && isValidDate(day, month, year) && isOver18(day, month, year)) return '#4EDD69';
     return '#CCC';
   };
 
-  const isValid = !error && blurred && isFilled && isNumeric && isValidDate(day, month, year) && isOver18(day, month, year);
+  // Button is active as soon as the date is valid and over 18
+  const isValid = isFilled && isNumeric && isValidDate(day, month, year) && isOver18(day, month, year);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>DATE OF BIRTH</Text>
-      <Text style={styles.verificationText}>
-        Please enter your date of birth. You must be at least 18 years old to use Stable Stakes.
-      </Text>
-      <View style={styles.dobRow}>
-        <InputField
-          placeholder="DD"
-          value={day}
-          onChangeText={setDay}
-          keyboardType="number-pad"
-          maxLength={2}
-          style={{
-            ...styles.dobBox,
-            borderColor: getBorderColor(),
-          }}
-          containerStyle={{ width: scaleWidth(73), marginRight: scaleWidth(12.5) }}
-          onBlur={() => setBlurred(true)}
-        />
-        <InputField
-          placeholder="MM"
-          value={month}
-          onChangeText={setMonth}
-          keyboardType="number-pad"
-          maxLength={2}
-          style={{
-            ...styles.dobBox,
-            borderColor: getBorderColor(),
-          }}
-          containerStyle={{ width: scaleWidth(73), marginRight: scaleWidth(12.5) }}
-          onBlur={() => setBlurred(true)}
-        />
-        <InputField
-          placeholder="YYYY"
-          value={year}
-          onChangeText={setYear}
-          keyboardType="number-pad"
-          maxLength={4}
-          style={{
-            ...styles.dobBox,
-            borderColor: getBorderColor(),
-          }}
-          containerStyle={{ width: scaleWidth(129) }}
-          onBlur={() => setBlurred(true)}
+      <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+        <Text style={styles.header}>DATE OF BIRTH</Text>
+        <Text style={styles.verificationText}>
+          Please enter your date of birth. You must be at least 18 years old to use Stable Stakes.
+        </Text>
+        <View style={styles.dobRow}>
+          <TextInput
+            ref={dayRef}
+            placeholder="DD"
+            value={day}
+            onChangeText={text => {
+              setDay(text);
+              if (text.length === 2) monthRef.current?.focus();
+            }}
+            keyboardType="number-pad"
+            maxLength={2}
+            style={{
+              ...styles.dobBox,
+              borderColor: getBorderColor(),
+              width: scaleWidth(73),
+              marginRight: scaleWidth(12.5),
+            }}
+            onBlur={() => setDayBlurred(true)}
+          />
+          <TextInput
+            ref={monthRef}
+            placeholder="MM"
+            value={month}
+            onChangeText={text => {
+              setMonth(text);
+              if (text.length === 2) yearRef.current?.focus();
+            }}
+            keyboardType="number-pad"
+            maxLength={2}
+            style={{
+              ...styles.dobBox,
+              borderColor: getBorderColor(),
+              width: scaleWidth(73),
+              marginRight: scaleWidth(12.5),
+            }}
+            onBlur={() => setMonthBlurred(true)}
+          />
+          <TextInput
+            ref={yearRef}
+            placeholder="YYYY"
+            value={year}
+            onChangeText={setYear}
+            keyboardType="number-pad"
+            maxLength={4}
+            style={{
+              ...styles.dobBox,
+              borderColor: getBorderColor(),
+              width: scaleWidth(129),
+            }}
+            onBlur={() => setYearBlurred(true)}
+          />
+        </View>
+        <View style={{ minHeight: scaleHeight(12), justifyContent: 'center' }}>
+          {(dayBlurred || monthBlurred || yearBlurred) && isFilled && error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : (
+            <Text style={[styles.errorText, { color: 'transparent' }]}>.</Text>
+          )}
+        </View>
+        <PrimaryButton
+          title="Next"
+          onPress={onNext}
+          isActive={isValid}
+          style={styles.nextButton}
         />
       </View>
-      <View style={{ minHeight: scaleHeight(12), justifyContent: 'center' }}>
-        {blurred && error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : (
-          <Text style={[styles.errorText, { color: 'transparent' }]}>.</Text>
-        )}
-      </View>
-      <PrimaryButton
-        title="Next"
-        onPress={onNext}
-        isActive={isValid}
-        style={styles.nextButton}
-      />
     </View>
   );
 };

@@ -21,6 +21,7 @@ import { NameStep } from './registration/NameStep';
 import { DobStep } from './registration/DobStep';
 import { GolfClubStep } from './registration/GolfClubStep';
 import { ChdIdStep } from './registration/ChdIdStep';
+import { OnboardingPanel } from './panels/OnboardingPanel';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const PANEL_HEIGHT = scaleHeight(737);
@@ -43,6 +44,7 @@ export const SlidingPanel: React.FC<Props> = ({
   onClose,
 }) => {
   const [step, setStep] = useState(1);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
@@ -151,6 +153,14 @@ export const SlidingPanel: React.FC<Props> = ({
     });
   };
 
+  const handleFinish = () => {
+    setShowOnboarding(true);
+  };
+
+  if (showOnboarding) {
+    return <OnboardingPanel isVisible={true} onClose={onClose} />;
+  }
+
   const renderProgressIndicators = () => {
     return (
       <View style={styles.progressContainer}>
@@ -213,6 +223,7 @@ export const SlidingPanel: React.FC<Props> = ({
             chdId={chdId}
             onChdIdChange={setChdId}
             onNext={handleNext}
+            onFinish={handleFinish}
           />
         )}
       </Animated.View>

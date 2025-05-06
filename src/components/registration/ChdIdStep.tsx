@@ -14,12 +14,14 @@ interface ChdIdStepProps {
   chdId: string;
   onChdIdChange: (chdId: string) => void;
   onNext: () => void;
+  onFinish: () => void;
 }
 
 export const ChdIdStep: React.FC<ChdIdStepProps> = ({
   chdId,
   onChdIdChange,
   onNext,
+  onFinish,
 }) => {
   const isValidChdId = useMemo(() => {
     return /^\d{10}$/.test(chdId.trim());
@@ -28,47 +30,55 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
   const [blurred, setBlurred] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
 
+  const handleFinish = () => {
+    if (isValidChdId) {
+      onFinish();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>YOUR CHD ID</Text>
-      <Text style={styles.verificationText}>
-        Enter your Central Handicap Database ID to verify your handicap status.
-      </Text>
-      <TextInput
-        style={[
-          styles.input,
-          chdId.length === 0
-            ? styles.inputInactive
-            : isValidChdId
-            ? styles.inputValid
-            : blurred && chdId.length > 0
-            ? styles.inputInvalid
-            : null,
-        ]}
-        value={chdId}
-        onChangeText={onChdIdChange}
-        placeholder="CHD ID"
-        placeholderTextColor="rgba(96, 133, 123, 0.50)"
-        autoCapitalize="characters"
-        keyboardType="number-pad"
-        maxLength={10}
-        onBlur={() => setBlurred(true)}
-      />
-      <PrimaryButton
-        title="Next"
-        onPress={onNext}
-        isActive={isValidChdId}
-        style={styles.nextButton}
-      />
-      <TouchableOpacity onPress={() => setInfoVisible(true)} activeOpacity={0.7} style={styles.helpContainer}>
-        <Text style={styles.helpText}>Help me find it</Text>
-      </TouchableOpacity>
-      <InfoBottomSheet
-        isVisible={infoVisible}
-        onClose={() => setInfoVisible(false)}
-        title="CHD LIFETIME ID"
-        content={"Your CHD lifetime ID, also known as your Membership number, is a unique 10-digit code used to track your golf handicap across clubs and competitions. You can find in golf apps like England Golf or IG Member."}
-      />
+      <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
+        <Text style={styles.header}>YOUR CHD ID</Text>
+        <Text style={styles.verificationText}>
+          Enter your Central Handicap Database ID to verify your handicap status.
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            chdId.length === 0
+              ? styles.inputInactive
+              : isValidChdId
+              ? styles.inputValid
+              : blurred && chdId.length > 0
+              ? styles.inputInvalid
+              : null,
+          ]}
+          value={chdId}
+          onChangeText={onChdIdChange}
+          placeholder="CHD ID"
+          placeholderTextColor="rgba(96, 133, 123, 0.50)"
+          autoCapitalize="characters"
+          keyboardType="number-pad"
+          maxLength={10}
+          onBlur={() => setBlurred(true)}
+        />
+        <PrimaryButton
+          title="Finish"
+          onPress={handleFinish}
+          isActive={isValidChdId}
+          style={styles.nextButton}
+        />
+        <TouchableOpacity onPress={() => setInfoVisible(true)} activeOpacity={0.7} style={styles.helpContainer}>
+          <Text style={styles.helpText}>Help me find it</Text>
+        </TouchableOpacity>
+        <InfoBottomSheet
+          isVisible={infoVisible}
+          onClose={() => setInfoVisible(false)}
+          title="CHD LIFETIME ID"
+          content={"Your CHD lifetime ID, also known as your Membership number, is a unique 10-digit code used to track your golf handicap across clubs and competitions. You can find in golf apps like England Golf or IG Member."}
+        />
+      </View>
     </View>
   );
 };
