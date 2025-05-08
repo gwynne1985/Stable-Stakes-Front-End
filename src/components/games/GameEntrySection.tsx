@@ -4,12 +4,20 @@ import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { GameEntryCard } from './GameEntryCard';
 import { RulesExplainerPanel } from '../panels/RulesExplainerPanel';
 
-export const GameEntrySection: React.FC = () => {
+interface GameEntrySectionProps {
+  onGameCardPress?: (score: 34 | 37 | 40) => void;
+}
+
+export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPress }) => {
   const [isRulesPanelVisible, setIsRulesPanelVisible] = useState(false);
 
-  const handleCardPress = (score: number) => {
-    // Handle card press - to be implemented
+  const handleCardPress = (score: 34 | 37 | 40) => {
+    if (onGameCardPress) {
+      onGameCardPress(score);
+    } else {
+      // Default behavior (for legacy use):
     console.log(`Selected game: ${score}+`);
+    }
   };
 
   return (

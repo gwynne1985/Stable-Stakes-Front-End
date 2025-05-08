@@ -53,7 +53,7 @@ export const NameStep: React.FC<NameStepProps> = ({
             Let us know what you like to be called so we{"\n"}
             can personalise your app experience.{"\n"}
             <Text style={{ color: '#E3E3E3' }}>…………..</Text>
-          </Text>
+      </Text>
           <View style={styles.fieldsContainer}>
             <View style={{ marginBottom: scaleHeight(16) }}>
               <InputField
@@ -72,18 +72,18 @@ export const NameStep: React.FC<NameStepProps> = ({
                 onChangeText={onLastNameChange}
                 onBlur={() => setLastNameBlurred(true)}
                 isValid={isLastNameValid}
-                autoCapitalize="words"
-              />
+        autoCapitalize="words"
+      />
             </View>
             <View style={{ minHeight: scaleHeight(12), marginBottom: scaleHeight(16) }} />
           </View>
-          <PrimaryButton
-            title="Next"
-            onPress={onNext}
+      <PrimaryButton
+        title="Next"
+        onPress={onNext}
             isActive={isFormValid()}
-            style={styles.nextButton}
-          />
-        </View>
+        style={styles.nextButton}
+      />
+    </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
