@@ -62,7 +62,7 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
           </TouchableOpacity>
         ))}
       </View>
-      <View style={[styles.walletInfoBox, { marginTop: scaleHeight(15) }]}>
+      <View style={[styles.walletInfoBox, { marginTop: scaleHeight(50) }]}>
         <View style={styles.potentialLeft}>
           <Text style={styles.infoLabel}>Potential Return</Text>
           <Text style={styles.infoValue}>£{calculatedPotentialReturn}</Text>
@@ -91,11 +91,11 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
             navigation.navigate('WalletScreen');
           }}
         >
-          <Text style={styles.topUpText}>top up</Text>
+          <Text style={styles.topUpText}>Top Up</Text>
         </TouchableOpacity>
       </View>
       <PrimaryButton
-        title="Enter Game"
+        title="Next"
         onPress={() => {
           // Always call onNext for debugging
           if (onNext) onNext();
@@ -135,13 +135,16 @@ const styles = StyleSheet.create({
   },
   stakeOptionsColumn: {
     width: scaleWidth(300),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: scaleHeight(10),
+    gap: scaleWidth(10),
+    marginTop: scaleHeight(-25),
   },
   stakeOption: {
-    width: scaleWidth(300),
+    flex: 1,
     paddingVertical: scaleHeight(8),
-    paddingHorizontal: scaleWidth(35),
+    paddingHorizontal: scaleWidth(20),
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: scaleWidth(100),
@@ -158,7 +161,7 @@ const styles = StyleSheet.create({
     color: '#18302A',
     textAlign: 'center',
     fontFamily: 'Poppins',
-    fontSize: scaleWidth(20),
+    fontSize: scaleWidth(16),
     fontStyle: 'italic',
     fontWeight: '700',
     letterSpacing: -0.6,
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     fontSize: scaleWidth(20),
     fontWeight: '800',
     fontStyle: 'italic',
-    letterSpacing: -1.2,
+    letterSpacing: -0.3,
     textAlign: 'left',
     textTransform: 'uppercase',
     marginBottom: 0,
@@ -232,7 +235,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     width: scaleWidth(300),
-    marginTop: scaleHeight(32),
+    marginTop: scaleHeight(88),
   },
   progressContainer: {
     position: 'absolute',

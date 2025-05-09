@@ -8,6 +8,7 @@ interface GameSummaryStepProps {
   targetScore: 34 | 37 | 40;
   onNext: () => void;
   onClose?: () => void;
+  handlePanelClose?: () => void;
 }
 
 const GAME_INFO = {
@@ -34,7 +35,7 @@ const GAME_INFO = {
   },
 };
 
-export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, onNext, onClose }) => {
+export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, onNext, onClose, handlePanelClose }) => {
   const info = GAME_INFO[targetScore];
   // Example values for avg and previous score
   const avgScore = 34;
@@ -50,7 +51,7 @@ export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, o
       <View style={styles.dragIndicator} />
       <TouchableOpacity
         style={styles.closeButton}
-        onPress={onClose}
+        onPress={handlePanelClose || onClose}
         hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
       >
         <Image
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: scaleWidth(300),
-    marginTop: scaleHeight(40),
+    marginTop: scaleHeight(10),
   },
   dragIndicator: {
     position: 'absolute',
