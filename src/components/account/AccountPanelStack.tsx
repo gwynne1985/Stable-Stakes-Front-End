@@ -7,10 +7,11 @@ import ManageCardsStep from './accountsteps/ManageCardsStep';
 import TransactionHistoryStep from './accountsteps/TransactionHistoryStep';
 import RefundDepositStep from './accountsteps/RefundDepositStep';
 import CommunicationsStep from './accountsteps/CommunicationsStep';
+import FAQStep from './accountsteps/FAQStep';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type Step = 'account' | 'contact' | 'yourClub' | 'manageCards' | 'transactionHistory' | 'refundDeposit' | 'communications';
+type Step = 'account' | 'contact' | 'yourClub' | 'manageCards' | 'transactionHistory' | 'refundDeposit' | 'communications' | 'faq';
 
 const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => boolean }, { setTitle: (title: string) => void }>(
   ({ setTitle }, ref) => {
@@ -25,6 +26,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
       else if (step === 'transactionHistory') setTitle('Transaction History');
       else if (step === 'refundDeposit') setTitle('Refund Deposit');
       else if (step === 'communications') setTitle('Communications');
+      else if (step === 'faq') setTitle('FAQs');
     }, [step, setTitle]);
 
     const goToContact = () => {
@@ -81,6 +83,15 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
       }).start();
     };
 
+    const goToFAQ = () => {
+      setStep('faq');
+      Animated.timing(slideAnim, {
+        toValue: -SCREEN_WIDTH,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    };
+
     const goBack = () => {
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -110,6 +121,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />
       ];
       width = SCREEN_WIDTH;
@@ -124,6 +136,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <ContactStep key="contact" onClose={goBack} />,
       ];
@@ -138,6 +151,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <YourClubStep key="yourClub" onClose={goBack} />,
       ];
@@ -152,6 +166,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <ManageCardsStep key="manageCards" onClose={goBack} />,
       ];
@@ -166,6 +181,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <TransactionHistoryStep key="transactionHistory" onClose={goBack} />,
       ];
@@ -180,6 +196,7 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <RefundDepositStep key="refundDeposit" onClose={goBack} />,
       ];
@@ -194,8 +211,24 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onTransactionHistory={goToTransactionHistory}
           onRefundDeposit={goToRefundDeposit}
           onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
         />,
         <CommunicationsStep key="communications" onClose={goBack} />,
+      ];
+      width = SCREEN_WIDTH * 2;
+    } else if (step === 'faq') {
+      panels = [
+        <AccountPanel 
+          key="account" 
+          onContactDetails={goToContact} 
+          onYourClub={goToYourClub}
+          onManageCards={goToManageCards}
+          onTransactionHistory={goToTransactionHistory}
+          onRefundDeposit={goToRefundDeposit}
+          onCommunications={goToCommunications}
+          onFAQ={goToFAQ}
+        />,
+        <FAQStep key="faq" onClose={goBack} />,
       ];
       width = SCREEN_WIDTH * 2;
     }

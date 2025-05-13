@@ -12,13 +12,15 @@ export const AccountPanel: React.FC<{
   onTransactionHistory: () => void;
   onRefundDeposit: () => void;
   onCommunications: () => void;
+  onFAQ: () => void;
 }> = ({ 
   onContactDetails, 
   onYourClub,
   onManageCards,
   onTransactionHistory,
   onRefundDeposit,
-  onCommunications
+  onCommunications,
+  onFAQ
 }) => {
   const handleCameraPress = () => {
     // TODO: Implement image picker logic
@@ -66,6 +68,11 @@ export const AccountPanel: React.FC<{
         <TouchableOpacity style={styles.linkContainer} onPress={onCommunications}>
           <Image source={require('../../../assets/icons/account/communications.png')} style={styles.linkIcon} />
           <Text style={styles.linkText}>Communications</Text>
+          <Image source={require('../../../assets/icons/account/arrow.png')} style={styles.arrowIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.linkContainer} onPress={onFAQ}>
+          <Image source={require('../../../assets/icons/account/faqs.png')} style={styles.linkIcon} />
+          <Text style={styles.linkText}>FAQs</Text>
           <Image source={require('../../../assets/icons/account/arrow.png')} style={styles.arrowIcon} />
         </TouchableOpacity>
       </View>
