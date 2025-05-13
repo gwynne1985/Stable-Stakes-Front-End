@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { scaleWidth, scaleHeight } from '../utils/scale';
+import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 const stats = [
   { label: 'Total Games', value: '10', valueStyle: 'big' },

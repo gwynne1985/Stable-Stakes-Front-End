@@ -15,7 +15,7 @@ import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { SmallConfirmButton } from '../SmallConfirmButton';
 import { SmallBackButton } from '../SmallBackButton';
 import { PrimaryButton } from '../PrimaryButton';
-import tickIcon from '../../../assets/icons/deposit-tick.png';
+import depositTick from '../../../assets/icons/deposit-tick.png'; // Keep original relative path
 import { Animated as RNAnimated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
@@ -219,7 +219,11 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
               </View>
               <View style={styles.buttonRow}>
                 <SmallBackButton onPress={handleClose} />
-                <SmallConfirmButton onPress={handleConfirm} loading={processing} title={processing ? 'Processing...' : undefined} />
+                <SmallConfirmButton 
+                  onPress={handleConfirm} 
+                  disabled={processing}
+                  title={processing ? 'Processing...' : undefined} 
+                />
               </View>
             </>
           ) : (
@@ -227,7 +231,7 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
               <Text style={styles.header}>DEPOSIT COMPLETE</Text>
               <View style={styles.completeContainer}>
                 <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
-                  <Image source={tickIcon} style={styles.tickIcon} />
+                  <Image source={depositTick} style={styles.tickIcon} />
                   {smallCircles.map((circle, i) => (
                     <Animated.View
                       key={i}

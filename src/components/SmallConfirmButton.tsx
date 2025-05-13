@@ -5,14 +5,20 @@ import { scaleWidth, scaleHeight } from '../utils/scale';
 interface SmallConfirmButtonProps {
   onPress: () => void;
   title?: string;
+  disabled?: boolean;
 }
 
 export const SmallConfirmButton: React.FC<SmallConfirmButtonProps> = ({
   onPress,
-  title = 'Confirm'
+  title = 'Confirm',
+  disabled = false
 }) => {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
+    <TouchableOpacity 
+      style={[styles.button, disabled && { opacity: 0.7 }]} 
+      onPress={onPress}
+      disabled={disabled}
+    >
       <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );

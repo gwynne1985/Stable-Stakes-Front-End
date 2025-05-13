@@ -25,13 +25,15 @@ interface Props {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  headerRight?: React.ReactNode;
 }
 
 export const SimpleSlidingPanel: React.FC<Props> = ({
   isVisible,
   title,
   onClose,
-  children
+  children,
+  headerRight
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const slideX = useRef(new Animated.Value(0)).current;
@@ -135,6 +137,11 @@ export const SimpleSlidingPanel: React.FC<Props> = ({
           >
             <View style={styles.dragIndicator} />
             <View style={styles.header}>
+              {headerRight && (
+                <View style={styles.backButtonContainer}>
+                  {headerRight}
+                </View>
+              )}
               <Text style={styles.title}>{title}</Text>
               <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                 <Image
@@ -165,8 +172,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT,
-    width: scaleWidth(360),
-    alignSelf: 'center',
+    width: '100%',
+    alignSelf: 'stretch',
     backgroundColor: '#E3E3E3',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     width: '100%',
-    paddingHorizontal: scaleWidth(20),
+    paddingHorizontal: 0,
   },
   dragIndicator: {
     width: 36,
@@ -208,7 +215,8 @@ const styles = StyleSheet.create({
   title: {
     position: 'absolute',
     top: scaleHeight(20),
-    left: scaleWidth(97),
+    left: 0,
+    right: 0,
     color: '#18302A',
     textAlign: 'center',
     fontFamily: 'Poppins',
@@ -231,5 +239,15 @@ const styles = StyleSheet.create({
     width: scaleWidth(29),
     height: scaleWidth(29),
     resizeMode: 'contain',
+  },
+  backButtonContainer: {
+    position: 'absolute',
+    top: scaleHeight(20),
+    left: scaleWidth(25),
+    width: scaleWidth(29),
+    height: scaleWidth(29),
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
 }); 

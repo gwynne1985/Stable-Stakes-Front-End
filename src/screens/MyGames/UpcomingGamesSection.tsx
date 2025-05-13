@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, View, Text } from 'react-native';
 import { scaleHeight, scaleWidth } from '../../utils/scale';
 import { GameEntryCard } from '../../components/GameEntryCard';
-import { CompletedGameCard } from '../../components/CompletedGameCard';
+import { CompletedGameCard } from '../../components/yourgames/CompletedGameCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
 
 interface UpcomingGamesSectionProps {

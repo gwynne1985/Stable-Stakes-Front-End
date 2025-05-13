@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
 import { PrimaryButton } from '../../PrimaryButton';
-import { InfoBottomSheet } from '../InfoBottomSheet';
+import { InfoBottomSheet } from '../../panels/InfoBottomSheet';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';

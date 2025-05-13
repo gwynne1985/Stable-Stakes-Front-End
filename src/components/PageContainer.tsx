@@ -11,8 +11,9 @@ import {
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
 import { SimpleSlidingPanel } from './panels/SimpleSlidingPanel';
-import { AccountStep } from './panels/AccountStep';
-import { NotificationsStep } from './panels/NotificationsStep';
+import AccountPanel from './account/AccountPanel';
+import AccountPanelStack from './account/AccountPanelStack';
+import { NotificationsStep } from './notifications/NotificationsStep';
 
 interface Props {
   title: string;
@@ -29,6 +30,16 @@ export const PageContainer: React.FC<Props> = ({
 }) => {
   const [isAccountPanelVisible, setIsAccountPanelVisible] = useState(false);
   const [isNotificationPanelVisible, setIsNotificationPanelVisible] = useState(false);
+  const [isContactStepVisible, setIsContactStepVisible] = useState(false);
+  const [accountPanelTitle, setAccountPanelTitle] = useState('Account');
+  const [showAccountBack, setShowAccountBack] = useState(false);
+  const accountPanelStackRef = useRef<{ goBack: () => void; canGoBack: () => boolean }>(null);
+
+  const handleAccountBack = () => {
+    if (accountPanelStackRef.current) {
+      accountPanelStackRef.current.goBack();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -74,10 +85,17 @@ export const PageContainer: React.FC<Props> = ({
 
       <SimpleSlidingPanel
         isVisible={isAccountPanelVisible}
-        title="Account"
+        title={accountPanelTitle}
         onClose={() => setIsAccountPanelVisible(false)}
+        headerRight={
+          accountPanelStackRef.current && accountPanelStackRef.current.canGoBack() ? (
+            <TouchableOpacity onPress={handleAccountBack} style={{ width: scaleWidth(29), height: scaleWidth(29), justifyContent: 'center', alignItems: 'center' }}>
+              <Image source={require('../../assets/icons/navigation/back.png')} style={{ width: scaleWidth(29), height: scaleWidth(29), resizeMode: 'contain' }} />
+            </TouchableOpacity>
+          ) : null
+        }
       >
-        <AccountStep onClose={() => setIsAccountPanelVisible(false)} />
+        <AccountPanelStack setTitle={setAccountPanelTitle} ref={accountPanelStackRef} />
       </SimpleSlidingPanel>
 
       <SimpleSlidingPanel

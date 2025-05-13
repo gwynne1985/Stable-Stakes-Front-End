@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PageContainer } from '../../components/PageContainer';
-import { StatsRow } from '../../components/StatsRow';
+import { StatsRow } from '../../components/yourgames/StatsRow';
 import { TabHeader } from '../../components/TabHeader';
 import { UpcomingGamesSection } from './UpcomingGamesSection';
 

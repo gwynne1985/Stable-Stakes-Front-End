@@ -15,9 +15,9 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
-import { StakeEntryStep } from './GameEntryPanel/StakeEntryStep';
+import { StakeEntryStep } from '../games/GameEntryPanel/StakeEntryStep';
 import { CompDateCalendarSheet } from './CompDateCalendarSheet';
-import { GameSummaryStep } from './GameEntryPanel/GameSummaryStep';
+import { GameSummaryStep } from '../games/GameEntryPanel/GameSummaryStep';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GameEntryConfirmationPopup } from './GameEntryConfirmationPopup';
 
@@ -217,7 +217,7 @@ const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string
       <CompDateCalendarSheet
         visible={calendarVisible}
         onClose={() => setCalendarVisible(false)}
-        onDateSelected={date => {
+        onDateSelected={(date: Date) => {
           setOtherDate(date);
           setSelected('other');
           setCalendarVisible(false);
