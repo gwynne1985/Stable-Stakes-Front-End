@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
-import EditPanel from './EditPanel';
+import { EditPanel } from './EditPanel';
+import { EditEmailStep } from './EditEmailStep';
+import { ValidationCodeStep } from './ValidationCodeStep';
 import BottomSheet from '../../BottomSheet';
+import { SimpleSlidingPanel, SimpleSlidingPanelRef } from '../../panels/SimpleSlidingPanel';
+import { EditPasswordStep } from './EditPasswordStep';
+import { useNavigation } from '@react-navigation/native';
 
 interface ContactStepProps {
   onClose: () => void;
@@ -13,11 +18,29 @@ interface ContactStepProps {
 const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveName }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [isEditingClub, setIsEditingClub] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
   const [email, setEmail] = useState('joebloggs@myemail.co.uk');
+  const [code, setCode] = useState('');
   const [club, setClub] = useState('Your Club');
   const [showBottomSheet, setShowBottomSheet] = useState(false);
   const [wasUpdated, setWasUpdated] = useState(false);
+
+  // Animation for code step
+  const codeAnim = useRef(new Animated.Value(1)).current; // 1 = offscreen right, 0 = onscreen
+  const panelRef = useRef<SimpleSlidingPanelRef>(null);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    if (showValidation) {
+      codeAnim.setValue(1);
+      Animated.timing(codeAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showValidation]);
 
   const handleEditName = () => {
     setIsEditingName(true);
@@ -26,42 +49,51 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
 
   const handleEditEmail = () => {
     setIsEditingEmail(true);
+    setShowValidation(false);
     setWasUpdated(false);
+    setCode('');
   };
 
-  const handleEditClub = () => {
-    setIsEditingClub(true);
+  const handleEditPassword = () => {
+    setIsEditingPassword(true);
     setWasUpdated(false);
   };
 
   const handleCloseEdit = () => {
-    // Let the panel slide down completely
     setTimeout(() => {
       setIsEditingName(false);
       setIsEditingEmail(false);
-      setIsEditingClub(false);
+      setIsEditingPassword(false);
+      setShowValidation(false);
       setWasUpdated(false);
-    }, 500); // Match the panel slide duration
+      setCode('');
+    }, 500);
   };
 
   const handleUpdate = () => {
+    setShowValidation(true);
+  };
+
+  const handleCodeNext = () => {
+    setEmail(email); // You may want to update this to actually save the new email
+    setShowValidation(false);
     setWasUpdated(true);
-    // Show bottom sheet while panel is still sliding down
+    // Slide down the panel
+    panelRef.current?.handleClose();
     setTimeout(() => {
       setShowBottomSheet(true);
-    }, 200); // Show bottom sheet after 200ms, while panel is still sliding down
+    }, 500);
   };
 
   const handleSaveEmail = (newEmail: string) => {
     setEmail(newEmail);
   };
 
-  const handleSaveClub = (newClub: string) => {
-    setClub(newClub);
-  };
-
   const handleBottomSheetDismiss = () => {
     setShowBottomSheet(false);
+  };
+  const handleEditClub = () => {
+    navigation.navigate('YourClubStep' as never);
   };
 
   return (
@@ -91,6 +123,18 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
           />
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.detailContainer} onPress={handleEditPassword}>
+          <Image 
+            source={require('../../../../assets/icons/account/privacypolicy.png')} 
+            style={styles.icon} 
+          />
+          <Text style={styles.text}>Password</Text>
+          <Image 
+            source={require('../../../../assets/icons/edit.png')} 
+            style={styles.editIcon} 
+          />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.detailContainer} onPress={handleEditClub}>
           <Image 
             source={require('../../../../assets/icons/account/yourclub.png')} 
@@ -104,32 +148,67 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
         </TouchableOpacity>
       </View>
 
-      <EditPanel
-        isVisible={isEditingName}
-        onClose={handleCloseEdit}
-        initialName={initialName}
-        onSaveName={onSaveName}
-        mode="name"
-        onUpdate={handleUpdate}
-      />
+      {isEditingName && (
+        <EditPanel
+          onClose={handleCloseEdit}
+          initialName={initialName}
+          onSaveName={onSaveName}
+          mode="name"
+          onUpdate={() => {
+            setWasUpdated(true);
+            setTimeout(() => {
+              setShowBottomSheet(true);
+            }, 200);
+          }}
+        />
+      )}
 
-      <EditPanel
+      {/* Email edit flow in a sliding panel */}
+      <SimpleSlidingPanel
+        ref={panelRef}
         isVisible={isEditingEmail}
         onClose={handleCloseEdit}
-        initialEmail={email}
-        onSaveEmail={handleSaveEmail}
-        mode="email"
-        onUpdate={handleUpdate}
-      />
+        title={showValidation ? 'Enter Code' : 'Edit Email'}
+      >
+        {!showValidation ? (
+          <EditEmailStep
+            email={email}
+            onEmailChange={setEmail}
+            onUpdate={handleUpdate}
+          />
+        ) : (
+          <Animated.View
+            style={{
+              flex: 1,
+              transform: [{ translateX: codeAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 500] }) }],
+            }}
+          >
+            <ValidationCodeStep
+              code={code}
+              onCodeChange={setCode}
+              onNext={handleCodeNext}
+              buttonTitle="Confirm"
+            />
+          </Animated.View>
+        )}
+      </SimpleSlidingPanel>
 
-      <EditPanel
-        isVisible={isEditingClub}
+      <SimpleSlidingPanel
+        isVisible={isEditingPassword}
         onClose={handleCloseEdit}
-        initialClub={club}
-        onSaveClub={handleSaveClub}
-        mode="club"
-        onUpdate={handleUpdate}
-      />
+        title="Edit Password"
+      >
+        <EditPasswordStep
+          onClose={handleCloseEdit}
+          onUpdate={() => {
+            setWasUpdated(true);
+            setTimeout(() => {
+              setIsEditingPassword(false);
+              setShowBottomSheet(true);
+            }, 500);
+          }}
+        />
+      </SimpleSlidingPanel>
 
       {showBottomSheet && (
         <BottomSheet

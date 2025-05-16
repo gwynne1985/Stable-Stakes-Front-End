@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT - TOP_GAP,
-    width: scaleWidth(360),
+    width: '100%',
     alignSelf: 'center',
     backgroundColor: '#E3E3E3',
     borderTopLeftRadius: 20,

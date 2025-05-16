@@ -1,96 +1,98 @@
-import React, { useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
-import { SimpleSlidingPanel, SimpleSlidingPanelRef } from '../../panels/SimpleSlidingPanel';
 import EditNameStep from './EditNameStep';
-import EditEmailStep from './EditEmailStep';
-import EditYourClubStep from './EditYourClubStep';
+import { EditEmailStep } from './EditEmailStep';
+import { ValidationCodeStep } from './ValidationCodeStep';
 
 interface EditPanelProps {
-  isVisible: boolean;
+  mode: 'name' | 'email';
   onClose: () => void;
-  mode: 'name' | 'email' | 'club';
-  initialName?: string;
-  initialEmail?: string;
-  initialClub?: string;
-  onSaveName?: (name: string) => void;
+  onSaveName?: (firstName: string, lastName: string) => void;
   onSaveEmail?: (email: string) => void;
-  onSaveClub?: (club: string) => void;
-  onUpdate?: () => void;
+  initialName?: string | { firstName: string; lastName: string };
+  initialEmail?: string;
+  onUpdate: () => void;
 }
 
-const EditPanel: React.FC<EditPanelProps> = ({
-  isVisible,
-  onClose,
+export const EditPanel: React.FC<EditPanelProps> = ({
   mode,
-  initialName,
-  initialEmail,
-  initialClub,
+  onClose,
   onSaveName,
   onSaveEmail,
-  onSaveClub,
+  initialName,
+  initialEmail,
   onUpdate,
 }) => {
-  const panelRef = useRef<SimpleSlidingPanelRef>(null);
+  const [firstName, setFirstName] = useState(
+    typeof initialName === 'string' 
+      ? initialName.split(' ')[0] 
+      : initialName?.firstName || ''
+  );
+  const [lastName, setLastName] = useState(
+    typeof initialName === 'string'
+      ? initialName.split(' ').slice(1).join(' ')
+      : initialName?.lastName || ''
+  );
+  const [email, setEmail] = useState(initialEmail || '');
+  const [code, setCode] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
-  const getTitle = () => {
-    switch (mode) {
-      case 'name':
-        return 'Edit Name';
-      case 'email':
-        return 'Edit Email';
-      case 'club':
-        return 'Edit Club';
-      default:
-        return '';
+  const handleSaveName = (name: string) => {
+    if (onSaveName) {
+      const [firstName, lastName] = name.split(' ');
+      onSaveName(firstName, lastName);
     }
+    onClose();
   };
 
-  const handleClose = () => {
-    panelRef.current?.handleClose();
+  const handleSaveEmail = () => {
+    if (onSaveEmail) {
+      onSaveEmail(email);
+    }
+    onClose();
+  };
+
+  const handleUpdate = () => {
+    setShowValidation(true);
+  };
+
+  const handleCodeNext = () => {
+    handleSaveEmail();
   };
 
   return (
-    <SimpleSlidingPanel
-      ref={panelRef}
-      isVisible={isVisible}
-      onClose={onClose}
-      title={getTitle()}
-    >
+    <View style={styles.container}>
       {mode === 'name' && (
         <EditNameStep
-          onClose={handleClose}
-          onSave={onSaveName!}
-          initialName={initialName!}
+          onClose={onClose}
+          onSave={handleSaveName}
+          initialName={`${firstName} ${lastName}`.trim()}
           onUpdateStart={() => {}}
           onUpdate={onUpdate}
         />
       )}
-      {mode === 'email' && (
+      {mode === 'email' && !showValidation && (
         <EditEmailStep
-          onClose={handleClose}
-          onSave={onSaveEmail!}
-          initialEmail={initialEmail!}
+          email={email}
+          onEmailChange={setEmail}
+          onUpdate={handleUpdate}
         />
       )}
-      {mode === 'club' && (
-        <EditYourClubStep
-          onClose={handleClose}
-          onSave={onSaveClub!}
-          initialClub={initialClub!}
-          onUpdate={onUpdate}
+      {mode === 'email' && showValidation && (
+        <ValidationCodeStep
+          code={code}
+          onCodeChange={setCode}
+          onNext={handleCodeNext}
         />
       )}
-    </SimpleSlidingPanel>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  backIcon: {
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    resizeMode: 'contain',
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
-});
-
-export default EditPanel; 
+}); 
