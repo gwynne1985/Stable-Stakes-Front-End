@@ -65,9 +65,9 @@ export const EditPanel: React.FC<EditPanelProps> = ({
     <View style={styles.container}>
       {mode === 'name' && (
         <EditNameStep
-          onClose={onClose}
+          initialName={`${firstName} ${lastName}`}
           onSave={handleSaveName}
-          initialName={`${firstName} ${lastName}`.trim()}
+          onClose={onClose}
           onUpdateStart={() => {}}
           onUpdate={onUpdate}
         />

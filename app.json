@@ -27,6 +27,10 @@
         "image": "./assets/images/golf-course.jpg",
         "resizeMode": "cover",
         "backgroundColor": "#FFFFFF"
+      },
+      "bundleIdentifier": "com.gwynne1985.stablestakes",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -40,7 +44,8 @@
         "backgroundColor": "#FFFFFF"
       },
       "newArchEnabled": true,
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "package": "com.gwynne1985.stablestakes"
     },
     "experiments": {
       "tsconfigPaths": true

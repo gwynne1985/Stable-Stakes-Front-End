@@ -37,10 +37,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Poppins',
     fontSize: scaleWidth(14),
-    fontStyle: 'italic',
+    fontStyle: 'normal',
     fontWeight: '600',
-    lineHeight: undefined,
-    letterSpacing: -0.42,
+    lineHeight: scaleHeight(22),
+    letterSpacing: scaleWidth(-0.14),
     color: '#18302A',
   },
 }); 

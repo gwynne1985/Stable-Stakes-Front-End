@@ -11,13 +11,29 @@ interface UpcomingGamesSectionProps {
 
 export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ activeTab }) => {
   const [visibleCount, setVisibleCount] = useState(10);
+  const [completedGames, setCompletedGames] = useState(() => {
+    // 15 completed games, cycling through allowed statuses and scores
+    return Array.from({ length: 15 }, (_, i) => {
+      const statuses = [
+        { status: 'Enter Score', plusColor: '#93DD4E', targetScore: 40 },
+        { status: 'In Review', plusColor: '#4EDD69', targetScore: 37 },
+        { status: 'Complete', plusColor: '#4EDDA9', targetScore: 34 },
+        { status: 'Rejected', plusColor: '#93DD4E', targetScore: 40 },
+      ];
+      const s = statuses[i % statuses.length];
+      return { ...s, id: i, score: 37 };
+    });
+  });
 
-  // Reset to 10 when component unmounts
-  useEffect(() => {
-    return () => {
-      setVisibleCount(10);
-    };
-  }, []);
+  const handleStatusChange = (gameIndex, newStatus, newScore) => {
+    setCompletedGames(games =>
+      games.map((g, idx) =>
+        idx === gameIndex
+          ? { ...g, status: newStatus, score: newScore }
+          : g
+      )
+    );
+  };
 
   // Demo data for three games
   const games = [
@@ -50,18 +66,6 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
     },
   ];
 
-  // 15 completed games, cycling through allowed statuses and scores
-  const completedGames = Array.from({ length: 15 }, (_, i) => {
-    const statuses = [
-      { status: 'Enter Score' as const, plusColor: '#93DD4E', targetScore: 40 },
-      { status: 'In Review' as const, plusColor: '#4EDD69', targetScore: 37 },
-      { status: 'Complete' as const, plusColor: '#4EDDA9', targetScore: 34 },
-      { status: 'Rejected' as const, plusColor: '#93DD4E', targetScore: 40 },
-    ];
-    const s = statuses[i % statuses.length];
-    return { ...s };
-  });
-
   const visibleGames = completedGames.slice(0, visibleCount);
 
   return (
@@ -75,7 +79,11 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
       {activeTab === 'Complete' && (
         <>
           {visibleGames.map((game, idx) => (
-            <CompletedGameCard key={idx} {...game} />
+            <CompletedGameCard
+              key={game.id || idx}
+              {...game}
+              onStatusChange={(status, score) => handleStatusChange(idx, status, score)}
+            />
           ))}
           <View style={styles.loadMoreContainer}>
             {visibleCount < 15 && (

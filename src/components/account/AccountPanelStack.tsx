@@ -11,7 +11,7 @@ import ContactUsStep from './accountsteps/ContactUsStep';
 import PrivacyPolicyStep from './accountsteps/PrivacyPolicyStep';
 import TermsUseStep from './accountsteps/TermsUseStep';
 import RedemptionTermsStep from './accountsteps/RedemptionTermsStep';
-import EditPanel from './accountsteps/EditPanel';
+import { EditPanel } from './accountsteps/EditPanel';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -229,7 +229,13 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onEdit={goToEdit}
           userName={userName}
         />,
-        <ManageCardsStep key="manageCards" onClose={goBack} />
+        <ManageCardsStep key="manageCards" onClose={goBack} onAddPaymentMethod={function (): void {
+          throw new Error('Function not implemented.');
+        } } paymentMethods={[]} onSetDefault={function (id: string): void {
+          throw new Error('Function not implemented.');
+        } } onRemoveCard={function (id: string): void {
+          throw new Error('Function not implemented.');
+        } } />
       ];
       width = SCREEN_WIDTH * 2;
     } else if (step === 'transactionHistory') {
@@ -250,7 +256,11 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           onEdit={goToEdit}
           userName={userName}
         />,
-        <TransactionHistoryStep key="transactionHistory" onClose={goBack} />
+        <TransactionHistoryStep 
+          key="transactionHistory" 
+          onClose={goBack}
+          transactions={[]}
+        />
       ];
       width = SCREEN_WIDTH * 2;
     } else if (step === 'refundDeposit') {
@@ -419,11 +429,10 @@ const AccountPanelStack = forwardRef<{ goBack: () => void; canGoBack: () => bool
           userName={userName}
         />,
         <EditPanel 
-          key="edit" 
-          onClose={goBack} 
+          key="edit"
+          onClose={goBack}
           initialName={userName}
-          onSaveName={handleSaveName}
-        />
+          onSaveName={handleSaveName} isVisible={false} mode={'email'}        />
       ];
       width = SCREEN_WIDTH;
     }

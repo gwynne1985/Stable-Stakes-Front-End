@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { ConfirmationPopup } from '../components/panels/ConfirmationPopup';
 import { Portal } from '@gorhom/portal';
 import { View, StyleSheet } from 'react-native';
+import { Image } from 'react-native';
 
 interface ConfirmationPopupContextType {
   showPopup: (config: {
@@ -83,6 +84,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 999999,
     elevation: 999999,
+  },
+  closeIcon: {
+    width: 24,
+    height: 24,
   },
 });
 

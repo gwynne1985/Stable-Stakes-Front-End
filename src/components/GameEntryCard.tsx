@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageSourcePropType, TouchableOpacity } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
+import { ScoreSubmissionPanel } from './games/scoresubmission';
 
 interface GameEntryCardProps {
   image: ImageSourcePropType;
@@ -21,6 +22,8 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
   stake,
   potentialReturn,
 }) => {
+  const [showScorePanel, setShowScorePanel] = React.useState(false);
+
   return (
     <View style={styles.card}> 
       {/* Image Section */}
@@ -49,7 +52,6 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
           <Text style={styles.stakeLabel}>Potential Return: </Text>
           <Text style={styles.stakeValue}>{potentialReturn}</Text>
         </View>
-        <Image source={require('../../assets/icons/edit.png')} style={styles.editIcon} />
       </View>
     </View>
   );
@@ -176,13 +178,5 @@ const styles = StyleSheet.create({
     fontSize: scaleWidth(10),
     fontWeight: '800',
     letterSpacing: scaleWidth(-0.28),
-  },
-  editIcon: {
-    position: 'absolute',
-    right: scaleWidth(21),
-    top: scaleHeight(24),
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    resizeMode: 'contain',
   },
 }); 

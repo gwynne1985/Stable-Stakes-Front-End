@@ -15,19 +15,20 @@ import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { SmallConfirmButton } from '../SmallConfirmButton';
 import { SmallBackButton } from '../SmallBackButton';
 import { PrimaryButton } from '../PrimaryButton';
-import depositTick from '../../../assets/icons/deposit-tick.png'; // Keep original relative path
+import depositTick from '../../../assets/icons/deposit-tick.png';
 import { Animated as RNAnimated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 interface ConfirmDepositBottomSheetProps {
   isVisible: boolean;
   amount: string | number;
-  paymentMethod: string;
-  cardImage: any;
-  cardNumber: string;
+  paymentMethod?: string;
+  cardImage?: any;
+  cardNumber?: string;
   onClose: () => void;
   onConfirm: (securityCode: string) => void;
   keyboardOffset?: number | RNAnimated.Value;
+  isRefund?: boolean;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -44,6 +45,7 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
   onClose,
   onConfirm,
   keyboardOffset = 0,
+  isRefund = false,
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -197,26 +199,37 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
           <View style={styles.dragIndicator} />
           {!complete ? (
             <>
-              <Text style={styles.header}>CONFIRM DEPOSIT</Text>
-              <View style={styles.row}>
-                <Text style={styles.label}>Amount:</Text>
-                <Text style={styles.amountValue}>£{amount}</Text>
+              <Text style={styles.header}>{isRefund ? 'CONFIRM REFUND' : 'CONFIRM DEPOSIT'}</Text>
+              <View style={styles.amountContainer}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Amount:</Text>
+                  <Text style={styles.amountValue}>£{amount}</Text>
+                </View>
               </View>
-              <Text style={styles.paymentLabel}>Payment Method</Text>
-              <View style={styles.paymentBox}>
-                <Image source={cardImage} style={styles.cardImage} resizeMode="contain" />
-                <Text style={styles.cardNumber}>{paymentMethod} {cardNumber}</Text>
-                <TextInput
-                  style={styles.securityInput}
-                  placeholder="CVV"
-                  placeholderTextColor="#8CA09A"
-                  maxLength={3}
-                  keyboardType="number-pad"
-                  value={securityCode}
-                  onChangeText={setSecurityCode}
-                  editable={!processing}
-                />
-              </View>
+              {isRefund && (
+                <Text style={styles.processingText}>
+                  Please allow up to 3 days for funds to be returned to your bank account.
+                </Text>
+              )}
+              {!isRefund && (
+                <>
+                  <Text style={styles.paymentLabel}>Payment Method</Text>
+                  <View style={styles.paymentBox}>
+                    <Image source={cardImage} style={styles.cardImage} resizeMode="contain" />
+                    <Text style={styles.cardNumber}>{paymentMethod} {cardNumber}</Text>
+                    <TextInput
+                      style={styles.securityInput}
+                      placeholder="CVV"
+                      placeholderTextColor="#8CA09A"
+                      maxLength={3}
+                      keyboardType="number-pad"
+                      value={securityCode}
+                      onChangeText={setSecurityCode}
+                      editable={!processing}
+                    />
+                  </View>
+                </>
+              )}
               <View style={styles.buttonRow}>
                 <SmallBackButton onPress={handleClose} />
                 <SmallConfirmButton 
@@ -228,7 +241,7 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
             </>
           ) : (
             <>
-              <Text style={styles.header}>DEPOSIT COMPLETE</Text>
+              <Text style={styles.header}>{isRefund ? 'REFUND COMPLETE' : 'DEPOSIT COMPLETE'}</Text>
               <View style={styles.completeContainer}>
                 <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
                   <Image source={depositTick} style={styles.tickIcon} />
@@ -244,7 +257,11 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
                   ))}
                 </Animated.View>
               </View>
-              <Text style={styles.completeText}>Your deposit was successful!</Text>
+              <Text style={styles.completeText}>
+                {isRefund 
+                  ? 'Your refund was successful!'
+                  : 'Your deposit was successful!'}
+              </Text>
               <PrimaryButton
                 title="Close"
                 onPress={handleClose}
@@ -294,12 +311,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: scaleHeight(25.648),
   },
+  amountContainer: {
+    width: scaleWidth(317),
+    borderBottomWidth: 1,
+    borderBottomColor: '#18302A',
+    marginTop: scaleHeight(35),
+    paddingBottom: scaleHeight(10),
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: scaleHeight(35),
-    marginLeft: scaleWidth(30),
-    width: scaleWidth(300),
+    width: '100%',
   },
   label: {
     color: '#18302A',
@@ -309,21 +331,22 @@ const styles = StyleSheet.create({
     lineHeight: scaleHeight(22.442),
   },
   amountValue: {
-    color: '#317143',
+    color: '#18302A',
     fontFamily: 'Poppins',
-    fontSize: scaleWidth(16),
+    fontSize: scaleWidth(14),
     fontStyle: 'italic',
     fontWeight: '900',
-    marginLeft: scaleWidth(15),
-    lineHeight: scaleHeight(25.648),
+    marginLeft: 'auto',
+    marginRight: scaleWidth(20),
+    lineHeight: scaleHeight(22.442),
+    textAlign: 'center',
   },
   paymentLabel: {
     color: '#18302A',
     fontFamily: 'Poppins',
     fontSize: scaleWidth(14),
     fontWeight: '500',
-    marginTop: scaleHeight(20),
-    marginLeft: scaleWidth(30),
+    marginTop: scaleHeight(25),
     lineHeight: scaleHeight(22.442),
     textAlign: 'left',
     width: scaleWidth(317),
@@ -331,7 +354,7 @@ const styles = StyleSheet.create({
   paymentBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: scaleHeight(15),
+    marginTop: scaleHeight(10),
     width: scaleWidth(317),
     height: scaleHeight(50),
     borderRadius: scaleWidth(5),
@@ -373,7 +396,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: scaleWidth(317),
-    marginTop: scaleHeight(50),
+    marginTop: scaleHeight(45),
+  },
+  buttonText: {
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: scaleHeight(22),
+    letterSpacing: scaleWidth(-0.14),
   },
   completeContainer: {
     alignItems: 'center',
@@ -412,5 +444,14 @@ const styles = StyleSheet.create({
     width: scaleWidth(300),
     alignSelf: 'center',
     height: BUTTON_HEIGHT,
+  },
+  processingText: {
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: scaleHeight(20),
+    width: scaleWidth(300),
   },
 }); 

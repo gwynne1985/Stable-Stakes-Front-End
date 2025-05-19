@@ -1,8 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AccountPanel } from '../components/account/AccountPanel';
-import { ContactDetailsStep } from '../screens/account/steps/ContactDetailsStep';
-import { YourClubStep } from '../screens/account/steps/YourClubStep';
+import AccountPanel from '../components/account/AccountPanel';
+import ContactStep from '../components/account/accountsteps/ContactStep';
+import EditYourClubStep from '../components/account/accountsteps/EditYourClubStep';
 import { ManageCardsStep } from '../screens/account/steps/ManageCardsStep';
 import { TransactionHistoryStep } from '../screens/account/steps/TransactionHistoryStep';
 import { RefundDepositStep } from '../screens/account/steps/RefundDepositStep';
@@ -26,8 +26,8 @@ export const AccountStack = () => {
       }}
     >
       <Stack.Screen name="AccountPanel" component={AccountPanel} />
-      <Stack.Screen name="ContactDetailsStep" component={ContactDetailsStep} />
-      <Stack.Screen name="YourClubStep" component={YourClubStep} />
+      <Stack.Screen name="ContactDetailsStep" component={ContactStep} />
+      <Stack.Screen name="YourClubStep" component={EditYourClubStep} />
       <Stack.Screen name="ManageCardsStep" component={ManageCardsStep} />
       <Stack.Screen name="TransactionHistoryStep" component={TransactionHistoryStep} />
       <Stack.Screen name="RefundDepositStep" component={RefundDepositStep} />

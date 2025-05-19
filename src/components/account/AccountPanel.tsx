@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 
 const AVATAR_SIZE = scaleWidth(118.26);
 const CAMERA_SIZE = scaleWidth(25.487);
+
+// Constants for validation
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+const MAX_RETRY_ATTEMPTS = 3;
+const COMPRESSION_QUALITY = 0.7;
 
 interface AccountPanelProps {
   onContactDetails: () => void;
@@ -38,14 +45,93 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
   userName
 }) => {
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const validateImage = async (uri: string): Promise<boolean> => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      // Check file size
+      if (blob.size > MAX_IMAGE_SIZE) {
+        Alert.alert(
+          'Image Too Large',
+          'Please select an image smaller than 5MB'
+        );
+        return false;
+      }
+
+      // Check file type
+      if (!ALLOWED_IMAGE_TYPES.includes(blob.type)) {
+        Alert.alert(
+          'Invalid Image Type',
+          'Please select a JPEG or PNG image'
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error validating image:', error);
+      return false;
+    }
+  };
+
+  const compressImage = async (uri: string): Promise<string> => {
+    try {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 500 } }], // Resize to reasonable dimensions
+        { compress: COMPRESSION_QUALITY, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      return manipResult.uri;
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      throw error;
+    }
+  };
+
+  const uploadImage = async (uri: string): Promise<void> => {
+    try {
+      // TODO: Replace with your actual upload logic
+      const formData = new FormData();
+      formData.append('image', {
+        uri,
+        type: 'image/jpeg',
+        name: 'avatar.jpg',
+      } as any);
+
+      // Simulate API call
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (Math.random() > 0.8) { // 20% chance of failure for testing
+            reject(new Error('Upload failed'));
+          } else {
+            resolve(true);
+          }
+        }, 1000);
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const handleCameraPress = async () => {
+    if (isLoading) return;
+
     try {
+      setIsLoading(true);
+      setRetryCount(0);
+
       // Request permission to access the photo library
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
+        Alert.alert(
+          'Permission Required',
+          'Sorry, we need camera roll permissions to make this work!'
+        );
         return;
       }
 
@@ -58,13 +144,43 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
       });
 
       if (!result.canceled) {
-        setAvatarImage(result.assets[0].uri);
-        // TODO: Here you would typically upload the image to your backend
-        // and update the user's profile
+        const selectedImage = result.assets[0].uri;
+        
+        // Validate image
+        const isValid = await validateImage(selectedImage);
+        if (!isValid) {
+          return;
+        }
+
+        // Compress image
+        const compressedUri = await compressImage(selectedImage);
+
+        // Upload with retry logic
+        let uploadSuccess = false;
+        while (!uploadSuccess && retryCount < MAX_RETRY_ATTEMPTS) {
+          try {
+            await uploadImage(compressedUri);
+            uploadSuccess = true;
+            setAvatarImage(compressedUri);
+          } catch (error) {
+            setRetryCount(prev => prev + 1);
+            if (retryCount >= MAX_RETRY_ATTEMPTS - 1) {
+              throw error;
+            }
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      alert('Error selecting image. Please try again.');
+      console.error('Error in image upload process:', error);
+      Alert.alert(
+        'Upload Failed',
+        'Failed to upload image. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+      setRetryCount(0);
     }
   };
 
@@ -77,11 +193,21 @@ const AccountPanel: React.FC<AccountPanelProps> = ({
       <View style={{ width: '100%', padding: 0 }}>
         <View style={styles.profileContainer}>
           <View style={styles.avatarContainer}>
-            <Image 
-              source={avatarImage ? { uri: avatarImage } : require('../../../assets/icons/account/avatar.png')} 
-              style={styles.avatar} 
-            />
-            <TouchableOpacity style={styles.cameraButton} onPress={onEdit}>
+            {isLoading ? (
+              <View style={[styles.avatar, styles.loadingContainer]}>
+                <ActivityIndicator size="large" color="#4EDD69" />
+              </View>
+            ) : (
+              <Image 
+                source={avatarImage ? { uri: avatarImage } : require('../../../assets/icons/account/avatar.png')} 
+                style={styles.avatar} 
+              />
+            )}
+            <TouchableOpacity 
+              style={[styles.cameraButton, isLoading && styles.disabledButton]} 
+              onPress={handleCameraPress}
+              disabled={isLoading}
+            >
               <Image source={require('../../../assets/icons/account/camera.png')} style={styles.cameraIcon} />
             </TouchableOpacity>
           </View>
@@ -320,6 +446,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: undefined,
     letterSpacing: -0.28,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 

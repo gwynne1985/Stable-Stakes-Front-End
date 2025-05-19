@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { ScoreSubmissionPanel } from '../games/scoresubmission';
 
 interface GameEntryCardProps {
   score: number;
@@ -17,6 +18,7 @@ interface GameEntryCardProps {
   highlightColor: string;
   onPress: () => void;
   isPopular?: boolean;
+  status: string;
 }
 
 export const GameEntryCard: React.FC<GameEntryCardProps> = ({
@@ -27,7 +29,10 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
   highlightColor,
   onPress,
   isPopular,
+  status,
 }) => {
+  const [showScorePanel, setShowScorePanel] = React.useState(false);
+
   return (
     <TouchableOpacity
       style={[styles.outerContainer, { 
@@ -67,6 +72,24 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
           />
         </View>
       </View>
+      {status === 'Enter Score' ? (
+        <TouchableOpacity onPress={() => setShowScorePanel(true)}>
+          <Text>test</Text>
+        </TouchableOpacity>
+      ) : (
+        <View>
+          <Text>{status}</Text>
+        </View>
+      )}
+      {showScorePanel && (
+        <ScoreSubmissionPanel
+          isVisible={showScorePanel}
+          compDate={'your date here'}
+          onBack={() => setShowScorePanel(false)}
+          onSubmit={() => setShowScorePanel(false)}
+          onClose={() => setShowScorePanel(false)}
+        />
+      )}
     </TouchableOpacity>
   );
 };

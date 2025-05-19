@@ -113,6 +113,9 @@ const EditYourClubStep: React.FC<EditYourClubStepProps> = ({
             onFocus={handleFocus}
             onBlur={handleBlur}
             style={styles.input}
+            autoCorrect={false}
+            autoCapitalize="none"
+            spellCheck={false}
           />
           {showDropdown && (
             <View style={styles.dropdown} pointerEvents="box-none">

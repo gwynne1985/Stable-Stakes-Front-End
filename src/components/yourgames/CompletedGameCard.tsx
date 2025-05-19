@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { ScoreSubmissionPanel } from '../games/scoresubmission';
 
 const STATUS_COLORS: Record<string, string> = {
   'Enter Score': 'rgba(54, 141, 241, 0.80)',
@@ -19,6 +20,7 @@ interface CompletedGameCardProps {
   stake?: string;
   score?: number;
   return?: string;
+  onStatusChange?: (status: string, score: number) => void;
 }
 
 export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
@@ -31,7 +33,31 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
   stake = '£20',
   score = 37,
   return: returnAmount = '£0',
+  onStatusChange,
 }) => {
+  const [showScorePanel, setShowScorePanel] = React.useState(false);
+
+  const calculatePotentialReturn = (score: number) => {
+    const stakeAmount = parseInt(stake.replace('£', ''));
+    let multiplier = 0;
+
+    if (score >= targetScore) {
+      switch (targetScore) {
+        case 40:
+          multiplier = 7;
+          break;
+        case 37:
+          multiplier = 5;
+          break;
+        case 34:
+          multiplier = 2;
+          break;
+      }
+    }
+
+    return stakeAmount * multiplier;
+  };
+
   return (
     <View style={styles.card}>
       {/* Target Score */}
@@ -40,9 +66,32 @@ export const CompletedGameCard: React.FC<CompletedGameCardProps> = ({
         <Text style={[styles.plus, { color: plusColor }]}>+</Text>
       </View>
       {/* Status Lozenge */}
-      <View style={[styles.statusLozenge, { backgroundColor: STATUS_COLORS[status] }]}> 
-        <Text style={styles.statusText}>{statusText || status}</Text>
-      </View>
+      {status === 'Enter Score' ? (
+        <TouchableOpacity
+          onPress={() => setShowScorePanel(true)}
+          style={[styles.statusLozenge, { backgroundColor: STATUS_COLORS[status] }]}
+        >
+          <Text style={styles.statusText}>{statusText || status}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.statusLozenge, { backgroundColor: STATUS_COLORS[status] }]}>
+          <Text style={styles.statusText}>{statusText || status}</Text>
+        </View>
+      )}
+      {showScorePanel && (
+        <ScoreSubmissionPanel
+          isVisible={showScorePanel}
+          compDate={date || ''}
+          onBack={() => setShowScorePanel(false)}
+          onSubmit={() => {}}
+          onClose={() => setShowScorePanel(false)}
+          clubName={club}
+          requiredScore={targetScore}
+          stake={parseInt(stake.replace('£', ''))}
+          potentialReturn={score ? calculatePotentialReturn(score) : 0}
+          onStatusChange={onStatusChange}
+        />
+      )}
       {/* Game Details */}
       <View style={styles.detailsGrid}>
         <View style={styles.detailsColumn}>

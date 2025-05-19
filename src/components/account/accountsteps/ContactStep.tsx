@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
-import { EditPanel } from './EditPanel';
 import { EditEmailStep } from './EditEmailStep';
 import { ValidationCodeStep } from './ValidationCodeStep';
 import BottomSheet from '../../BottomSheet';
 import { SimpleSlidingPanel, SimpleSlidingPanelRef } from '../../panels/SimpleSlidingPanel';
 import { EditPasswordStep } from './EditPasswordStep';
 import { useNavigation } from '@react-navigation/native';
+import EditNameStep from './EditNameStep';
+import EditYourClubStep from './EditYourClubStep';
 
 interface ContactStepProps {
   onClose: () => void;
@@ -19,6 +20,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [isEditingClub, setIsEditingClub] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [email, setEmail] = useState('joebloggs@myemail.co.uk');
   const [code, setCode] = useState('');
@@ -29,6 +31,8 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
   // Animation for code step
   const codeAnim = useRef(new Animated.Value(1)).current; // 1 = offscreen right, 0 = onscreen
   const panelRef = useRef<SimpleSlidingPanelRef>(null);
+  const namePanelRef = useRef<SimpleSlidingPanelRef>(null);
+  const clubPanelRef = useRef<SimpleSlidingPanelRef>(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -59,11 +63,17 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
     setWasUpdated(false);
   };
 
+  const handleEditClub = () => {
+    setIsEditingClub(true);
+    setWasUpdated(false);
+  };
+
   const handleCloseEdit = () => {
     setTimeout(() => {
       setIsEditingName(false);
       setIsEditingEmail(false);
       setIsEditingPassword(false);
+      setIsEditingClub(false);
       setShowValidation(false);
       setWasUpdated(false);
       setCode('');
@@ -92,8 +102,17 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
   const handleBottomSheetDismiss = () => {
     setShowBottomSheet(false);
   };
-  const handleEditClub = () => {
-    navigation.navigate('YourClubStep' as never);
+
+  const handleClubUpdate = () => {
+    setWasUpdated(true);
+    clubPanelRef.current?.handleClose();
+    setTimeout(() => {
+      setShowBottomSheet(true);
+    }, 500);
+  };
+
+  const handleSaveClub = (newClub: string) => {
+    setClub(newClub);
   };
 
   return (
@@ -148,20 +167,26 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
         </TouchableOpacity>
       </View>
 
-      {isEditingName && (
-        <EditPanel
+      <SimpleSlidingPanel
+        ref={namePanelRef}
+        isVisible={isEditingName}
+        onClose={handleCloseEdit}
+        title="Edit Name"
+      >
+        <EditNameStep
           onClose={handleCloseEdit}
+          onSave={onSaveName}
           initialName={initialName}
-          onSaveName={onSaveName}
-          mode="name"
+          onUpdateStart={() => {}}
           onUpdate={() => {
             setWasUpdated(true);
+            namePanelRef.current?.handleClose();
             setTimeout(() => {
               setShowBottomSheet(true);
-            }, 200);
+            }, 500);
           }}
         />
-      )}
+      </SimpleSlidingPanel>
 
       {/* Email edit flow in a sliding panel */}
       <SimpleSlidingPanel
@@ -207,6 +232,20 @@ const ContactStep: React.FC<ContactStepProps> = ({ onClose, initialName, onSaveN
               setShowBottomSheet(true);
             }, 500);
           }}
+        />
+      </SimpleSlidingPanel>
+
+      <SimpleSlidingPanel
+        ref={clubPanelRef}
+        isVisible={isEditingClub}
+        onClose={handleCloseEdit}
+        title="Edit Club"
+      >
+        <EditYourClubStep
+          onClose={handleCloseEdit}
+          onSave={handleSaveClub}
+          initialClub={club}
+          onUpdate={handleClubUpdate}
         />
       </SimpleSlidingPanel>
 
