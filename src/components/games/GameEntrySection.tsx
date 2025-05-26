@@ -23,7 +23,9 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>ENTER A GAME</Text>
+        <Text style={styles.title}>
+          ENTER A GAME
+        </Text>
         <TouchableOpacity 
           style={styles.infoButton}
           onPress={() => setIsRulesPanelVisible(true)}
@@ -42,6 +44,7 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
         winnings="350"
         highlightColor="#93DD4E"
         onPress={() => handleCardPress(40)}
+        status="Enter Score"
       />
 
       <GameEntryCard
@@ -52,6 +55,7 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
         highlightColor="#4EDD69"
         onPress={() => handleCardPress(37)}
         isPopular={true}
+        status="Enter Score"
       />
 
       <GameEntryCard
@@ -61,7 +65,10 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
         winnings="100"
         highlightColor="#4EDDA9"
         onPress={() => handleCardPress(34)}
+        status="Enter Score"
       />
+
+      <View style={{ marginBottom: -scaleHeight(20) }} />
 
       <RulesExplainerPanel
         isVisible={isRulesPanelVisible}
@@ -80,8 +87,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: scaleHeight(20),
-    paddingRight: scaleWidth(4),
     justifyContent: 'space-between',
+    width: scaleWidth(300),
+    alignSelf: 'center',
   },
   title: {
     fontFamily: 'Poppins',
@@ -90,6 +98,7 @@ const styles = StyleSheet.create({
     fontSize: scaleWidth(22),
     color: '#FFFFFF',
     textTransform: 'uppercase',
+    flex: 1,
   },
   infoButton: {
     width: scaleWidth(20),

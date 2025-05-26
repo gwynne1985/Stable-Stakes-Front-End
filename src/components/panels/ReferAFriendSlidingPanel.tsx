@@ -15,34 +15,25 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { ReferAFriendCarousel } from '../games/ReferAFriendCarousel';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PANEL_HEIGHT = SCREEN_HEIGHT;
 const TOP_GAP = scaleHeight(50);
-const SWIPE_THRESHOLD = 100; // Make swipe less sensitive
-const EXIT_DURATION = 500; // Increased from 300ms to 500ms
+const SWIPE_THRESHOLD = 100;
+const EXIT_DURATION = 500;
 
 interface Props {
   isVisible: boolean;
-  title: string;
   onClose: () => void;
-  children: React.ReactNode;
-  headerRight?: React.ReactNode;
-  canSwipeToDismiss?: boolean;
+  children?: React.ReactNode;
 }
 
-export interface SimpleSlidingPanelRef {
+export interface ReferAFriendSlidingPanelRef {
   handleClose: () => void;
 }
 
-export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
-  isVisible,
-  title,
-  onClose,
-  children,
-  headerRight,
-  canSwipeToDismiss = true,
-}, ref) => {
+export const ReferAFriendSlidingPanel = forwardRef<ReferAFriendSlidingPanelRef, Props>(({ isVisible, onClose, children }, ref) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const panY = useRef(new Animated.Value(0)).current as Animated.Value;
   const [isRendered, setIsRendered] = useState(false);
@@ -65,15 +56,14 @@ export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => canSwipeToDismiss,
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return canSwipeToDismiss && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
       },
       onPanResponderGrant: () => {
         panY.extractOffset();
       },
       onPanResponderMove: (_, gestureState) => {
-        if (!canSwipeToDismiss) return;
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
           if (!hasCrossedThresholdRef.current && gestureState.dy > SWIPE_THRESHOLD) {
@@ -88,7 +78,6 @@ export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
       onPanResponderRelease: (_, gestureState) => {
         panY.flattenOffset();
         hasCrossedThresholdRef.current = false;
-        if (!canSwipeToDismiss) return;
         if (gestureState.dy > SWIPE_THRESHOLD) {
           handleClose();
         } else {
@@ -108,7 +97,6 @@ export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
       setIsRendered(true);
       slideAnim.setValue(SCREEN_HEIGHT);
       panY.setValue(0);
-      
       Animated.spring(slideAnim, {
         toValue: TOP_GAP,
         useNativeDriver: true,
@@ -116,7 +104,6 @@ export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
         stiffness: 90,
       }).start();
     }
-
     return () => {
       panY.setValue(0);
       panY.flattenOffset();
@@ -139,46 +126,40 @@ export const SimpleSlidingPanel = forwardRef<SimpleSlidingPanelRef, Props>(({
       animationType="none"
       onRequestClose={handleClose}
     >
-      <View style={StyleSheet.absoluteFill}>
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <View style={[StyleSheet.absoluteFill, styles.overlay]} />
-        </TouchableWithoutFeedback>
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            styles.container,
-            {
-              transform: [
-                { translateY: slideAnim },
-                { translateY: panY },
-              ],
-            },
-          ]}
-        >
-          <View style={styles.swipeableArea} {...panResponder.panHandlers}>
-            <View style={styles.dragIndicator} />
-            <View style={styles.header}>
-              <Text style={styles.title}>{title}</Text>
-              {headerRight && (
-                <View style={styles.backButtonContainer}>
-                  {headerRight}
-                </View>
-              )}
-              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                <Image
-                  source={require('../../../assets/icons/navigation/close.png')}
-                  style={styles.closeIcon}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.contentContainer}>
-              {children}
-            </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={StyleSheet.absoluteFill}>
+          <TouchableWithoutFeedback onPress={handleClose}>
+            <View style={[StyleSheet.absoluteFill, styles.overlay]} />
           </TouchableWithoutFeedback>
-        </Animated.View>
-      </View>
+          <Animated.View
+            style={[
+              styles.container,
+              {
+                transform: [
+                  { translateY: slideAnim },
+                  { translateY: panY },
+                ],
+              },
+            ]}
+          >
+            <View {...panResponder.panHandlers} style={styles.swipeableArea}>
+              <View style={styles.dragIndicator} />
+              <View style={styles.header}>
+                <Text style={styles.title}>REFER A FRIEND</Text>
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                  <Image
+                    source={require('../../../assets/icons/navigation/close.png')}
+                    style={styles.closeIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.contentContainer}>
+              <ReferAFriendCarousel />
+            </View>
+          </Animated.View>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 });
@@ -194,86 +175,63 @@ const styles = StyleSheet.create({
     right: 0,
     height: SCREEN_HEIGHT - TOP_GAP,
     width: '100%',
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     backgroundColor: '#E3E3E3',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
   },
   swipeableArea: {
     width: '100%',
+    alignItems: 'center',
+    paddingTop: scaleHeight(8),
+    paddingBottom: scaleHeight(8),
+  },
+  dragIndicator: {
+    width: scaleWidth(40),
+    height: scaleHeight(4),
+    borderRadius: 2,
+    backgroundColor: '#B0B0B0',
+    marginBottom: scaleHeight(8),
+  },
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: scaleHeight(8),
+  },
+  title: {
+    color: '#18302A',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(18),
+    fontWeight: '900',
+    fontStyle: 'italic',
+    letterSpacing: -0.18,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    right: scaleWidth(16),
+    top: '50%',
+    transform: [{ translateY: -scaleHeight(12) }],
+    zIndex: 10,
+  },
+  closeIcon: {
+    width: scaleWidth(24),
+    height: scaleWidth(24),
   },
   contentContainer: {
     flex: 1,
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 0,
-  },
-  dragIndicator: {
-    width: 36,
-    height: 4,
-    backgroundColor: '#18302A',
-    borderRadius: 2,
-    marginTop: 8,
-    opacity: 0.3,
-    alignSelf: 'center',
-  },
-  header: {
-    width: '100%',
-    height: scaleHeight(60),
-    paddingTop: scaleHeight(20),
-    paddingHorizontal: scaleWidth(20),
-    alignItems: 'center',
-  },
-  title: {
-    position: 'absolute',
-    top: scaleHeight(20),
-    left: 0,
-    right: 0,
-    color: '#18302A',
-    textAlign: 'center',
-    fontFamily: 'Poppins',
-    fontStyle: 'italic',
-    fontWeight: '900',
-    fontSize: scaleWidth(20),
-    letterSpacing: -0.2,
-    textTransform: 'uppercase',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: scaleHeight(13),
-    right: scaleWidth(25),
-    width: scaleWidth(40),
-    height: scaleWidth(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  closeIcon: {
-    width: scaleWidth(29),
-    height: scaleWidth(29),
-    resizeMode: 'contain',
-  },
-  backButtonContainer: {
-    position: 'absolute',
-    top: scaleHeight(13),
-    left: scaleWidth(25),
-    width: scaleWidth(40),
-    height: scaleWidth(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
+    paddingTop: scaleHeight(8),
   },
 }); 

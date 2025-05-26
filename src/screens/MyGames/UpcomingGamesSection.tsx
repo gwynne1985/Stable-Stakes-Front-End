@@ -14,7 +14,7 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
   const [completedGames, setCompletedGames] = useState(() => {
     // 15 completed games, cycling through allowed statuses and scores
     return Array.from({ length: 15 }, (_, i) => {
-      const statuses = [
+      const statuses: { status: 'Enter Score' | 'In Review' | 'Complete' | 'Rejected'; plusColor: string; targetScore: number }[] = [
         { status: 'Enter Score', plusColor: '#93DD4E', targetScore: 40 },
         { status: 'In Review', plusColor: '#4EDD69', targetScore: 37 },
         { status: 'Complete', plusColor: '#4EDDA9', targetScore: 34 },
@@ -25,7 +25,7 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
     });
   });
 
-  const handleStatusChange = (gameIndex, newStatus, newScore) => {
+  const handleStatusChange = (gameIndex: number, newStatus: 'Enter Score' | 'In Review' | 'Complete' | 'Rejected', newScore: number) => {
     setCompletedGames(games =>
       games.map((g, idx) =>
         idx === gameIndex
@@ -52,7 +52,7 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
       plusColor: '#4EDD69',
       date: '10 SEP',
       club: 'Golf Club',
-      stake: '£30',
+      stake: '£20',
       potentialReturn: '£70',
     },
     {
@@ -67,6 +67,7 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
   ];
 
   const visibleGames = completedGames.slice(0, visibleCount);
+  console.log('visibleGames', visibleGames);
 
   return (
     <ScrollView
@@ -74,15 +75,20 @@ export const UpcomingGamesSection: React.FC<UpcomingGamesSectionProps> = ({ acti
       showsVerticalScrollIndicator={false}
     >
       {activeTab === 'Upcoming' && games.map((game, idx) => (
-        <GameEntryCard key={idx} {...game} />
+        <GameEntryCard
+          key={`${game.targetScore}-${game.stake}`}
+          {...game}
+          targetScore={game.targetScore as 34 | 37 | 40}
+          potentialReturn={parseFloat((game.potentialReturn || '').replace(/[^0-9.-]+/g, ''))}
+        />
       ))}
       {activeTab === 'Complete' && (
         <>
-          {visibleGames.map((game, idx) => (
+          {(visibleGames || []).map((game, idx) => (
             <CompletedGameCard
               key={game.id || idx}
               {...game}
-              onStatusChange={(status, score) => handleStatusChange(idx, status, score)}
+              onStatusChange={(status, score) => handleStatusChange(idx, status as 'Enter Score' | 'In Review' | 'Complete' | 'Rejected', score)}
             />
           ))}
           <View style={styles.loadMoreContainer}>

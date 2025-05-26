@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Platform, TextInput, Image, ImageBackground } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions, Platform, TextInput, Image, ImageBackground, Alert } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
 import { PrimaryButton } from '../../PrimaryButton';
 import * as Haptics from 'expo-haptics';
@@ -229,7 +229,7 @@ const ScoreSubmissionPanel: React.FC<ScoreSubmissionPanelProps> = ({
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
+        Alert.alert('Sorry, we need camera roll permissions to make this work!');
         return;
       }
 

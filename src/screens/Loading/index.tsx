@@ -79,9 +79,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     position: 'absolute',
-    left: scaleWidth(32),
-    width: scaleWidth(279),
-    height: scaleHeight(177),
+    left: '50%',
+    width: scaleWidth(209.25),
+    height: scaleHeight(132.75),
+    marginLeft: -scaleWidth(209.25 / 2),
     zIndex: 2,
   },
   logo: {

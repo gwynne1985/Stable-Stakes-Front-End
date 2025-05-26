@@ -60,11 +60,11 @@ export const DobStep: React.FC<DobStepProps> = ({
 
   // Validation logic: always update error based on current values
   React.useEffect(() => {
-    if (!isFilled || !isNumeric) {
-      setError('Invalid date');
+    if (!isFilled) {
+      setError('');
       return;
     }
-    if (!isValidDate(day, month, year)) {
+    if (!isNumeric || !isValidDate(day, month, year)) {
       setError('Invalid date');
       return;
     }
@@ -97,6 +97,7 @@ export const DobStep: React.FC<DobStepProps> = ({
           <TextInput
             ref={dayRef}
             placeholder="DD"
+            placeholderTextColor="rgba(96, 133, 123, 0.50)"
             value={day}
             onChangeText={text => {
               setDay(text);
@@ -106,15 +107,17 @@ export const DobStep: React.FC<DobStepProps> = ({
             maxLength={2}
             style={{
               ...styles.dobBox,
-              borderColor: getBorderColor(),
               width: scaleWidth(73),
               marginRight: scaleWidth(12.5),
+              borderColor: isValid ? '#4EDD69' : getBorderColor(),
+              borderWidth: 1,
             }}
             onBlur={() => setDayBlurred(true)}
           />
           <TextInput
             ref={monthRef}
             placeholder="MM"
+            placeholderTextColor="rgba(96, 133, 123, 0.50)"
             value={month}
             onChangeText={text => {
               setMonth(text);
@@ -124,23 +127,26 @@ export const DobStep: React.FC<DobStepProps> = ({
             maxLength={2}
             style={{
               ...styles.dobBox,
-              borderColor: getBorderColor(),
               width: scaleWidth(73),
               marginRight: scaleWidth(12.5),
+              borderColor: isValid ? '#4EDD69' : getBorderColor(),
+              borderWidth: 1,
             }}
             onBlur={() => setMonthBlurred(true)}
           />
           <TextInput
             ref={yearRef}
             placeholder="YYYY"
+            placeholderTextColor="rgba(96, 133, 123, 0.50)"
             value={year}
             onChangeText={setYear}
             keyboardType="number-pad"
             maxLength={4}
             style={{
               ...styles.dobBox,
-              borderColor: getBorderColor(),
               width: scaleWidth(129),
+              borderColor: isValid ? '#4EDD69' : getBorderColor(),
+              borderWidth: 1,
             }}
             onBlur={() => setYearBlurred(true)}
           />
@@ -159,6 +165,8 @@ export const DobStep: React.FC<DobStepProps> = ({
           style={styles.nextButton}
         />
       </View>
+      {/* Debug: show isValid value for testing, remove after verification */}
+      {/* <Text>isValid: {String(isValid)}</Text> */}
     </View>
   );
 };

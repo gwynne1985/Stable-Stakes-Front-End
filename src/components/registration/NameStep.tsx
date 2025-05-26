@@ -132,6 +132,6 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     width: '100%',
-    marginTop: scaleHeight(100),
+    marginTop: scaleHeight(10),
   },
 }); 

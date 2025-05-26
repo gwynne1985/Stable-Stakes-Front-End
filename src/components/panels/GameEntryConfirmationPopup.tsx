@@ -16,6 +16,10 @@ interface GameEntryConfirmationPopupProps {
   onBack: () => void;
   onConfirm: () => void;
   onClose: () => void;
+  isEditMode?: boolean;
+  onCancel?: () => void;
+  showOnlyGameUpdate?: boolean;
+  disableInternalAnimation?: boolean;
 }
 
 export const GameEntryConfirmationPopup: React.FC<GameEntryConfirmationPopupProps> = ({
@@ -28,32 +32,67 @@ export const GameEntryConfirmationPopup: React.FC<GameEntryConfirmationPopupProp
   onBack,
   onConfirm,
   onClose,
+  isEditMode = false,
+  onCancel,
+  showOnlyGameUpdate = false,
+  disableInternalAnimation = false,
 }) => {
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const bottomSheetAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const [processing, setProcessing] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [gameCancelled, setGameCancelled] = useState(false);
+  const [internalVisible, setInternalVisible] = useState(isVisible);
   const bigCircleScale = useRef(new Animated.Value(0)).current;
   const smallCircles = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
 
   useEffect(() => {
+    if (disableInternalAnimation) return;
     if (isVisible) {
+      setInternalVisible(true);
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: SCREEN_HEIGHT,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setInternalVisible(false);
+      });
+    }
+  }, [isVisible, disableInternalAnimation]);
+
+  useEffect(() => {
+    if (disableInternalAnimation) return;
+    if (internalVisible && isVisible) {
       setComplete(false);
+      setGameCancelled(false);
+      setShowCancelConfirm(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
         damping: 20,
         stiffness: 90,
       }).start();
+    }
+  }, [internalVisible, isVisible, disableInternalAnimation]);
+
+  useEffect(() => {
+    if (showCancelConfirm) {
+      Animated.spring(bottomSheetAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 90,
+      }).start();
     } else {
-      Animated.timing(slideAnim, {
+      Animated.timing(bottomSheetAnim, {
         toValue: SCREEN_HEIGHT,
         duration: 300,
         useNativeDriver: true,
       }).start();
-      setProcessing(false);
-      setComplete(false);
     }
-  }, [isVisible]);
+  }, [showCancelConfirm]);
 
   useEffect(() => {
     if (complete) {
@@ -80,6 +119,35 @@ export const GameEntryConfirmationPopup: React.FC<GameEntryConfirmationPopupProp
     }
   }, [complete]);
 
+  const handleCancel = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const handleCancelConfirm = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setGameCancelled(true);
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleCancelReject = () => {
+    setShowCancelConfirm(false);
+  };
+
+  const handleClose = () => {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setInternalVisible(false);
+      onClose();
+    });
+  };
+
   const handleConfirm = () => {
     setProcessing(true);
     setTimeout(() => {
@@ -96,71 +164,22 @@ export const GameEntryConfirmationPopup: React.FC<GameEntryConfirmationPopupProp
     { width: scaleWidth(13), height: scaleWidth(13), borderRadius: scaleWidth(6.5), bottom: -scaleWidth(18), right: scaleWidth(20) },
   ];
 
-  return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onBack}
-      statusBarTranslucent={true}
-    >
-      <View style={styles.overlay}>
-        <Animated.View 
-          style={[
-            styles.popup,
-            {
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
-          {!complete ? (
-            <>
-              <Text style={styles.title}>GAME SUMMARY</Text>
-              <View style={styles.infoBoxesContainer}>
-                <View style={styles.infoBoxRow}>
-                  <Text style={styles.infoLabel}>Club</Text>
-                  <Text style={styles.infoValue}>{clubName}</Text>
-                </View>
-                <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
-                  <Text style={styles.infoLabel}>Required Score</Text>
-                  <Text style={styles.infoValue}>{requiredScore}+</Text>
-                </View>
-                <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
-                  <Text style={styles.infoLabel}>Stake</Text>
-                  <Text style={styles.infoValue}>£{stake}</Text>
-                </View>
-                <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
-                  <Text style={styles.infoLabel}>Comp Date</Text>
-                  <Text style={styles.infoValue}>{compDate}</Text>
-                </View>
-                <View style={[styles.infoBoxRow, styles.infoBoxBorder, { borderBottomWidth: 1, borderColor: '#18302A' }]}> 
-                  <Text style={styles.infoLabel}>Potential Return</Text>
-                  <Text style={styles.infoValue}>£{potentialReturn}</Text>
-                </View>
-              </View>
-              <Text style={styles.termsText}>
-                By confirming you agree to abide by the rules and regulations set out in our Terms of Use.
-              </Text>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity 
-                  style={[styles.button, styles.cancelButton]} 
-                  onPress={onBack}
-                  disabled={processing}
-                >
-                  <Text style={styles.buttonText}>Back</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.button, styles.confirmButton, processing && { opacity: 0.7 }]} 
-                  onPress={handleConfirm}
-                  disabled={processing}
-                >
-                  <Text style={styles.buttonText}>{processing ? 'Processing...' : 'Confirm'}</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.title}>YOU ARE IN</Text>
+  // Determine which button row to show
+  const showEditButtons = isEditMode && !complete && !!onCancel;
+
+  // If showOnlyGameUpdate, only show the GAME UPDATE message
+  if (showOnlyGameUpdate) {
+    return (
+      <Modal
+        visible={disableInternalAnimation ? isVisible : internalVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={handleClose}
+      >
+        <View style={styles.overlay}>
+          {disableInternalAnimation ? (
+            <View style={styles.popup}>
+              <Text style={styles.title}>GAME UPDATE</Text>
               <View style={styles.completeContainer}>
                 <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
                   <Image source={require('../../../assets/icons/deposit-tick.png')} style={styles.tickIcon} />
@@ -177,17 +196,333 @@ export const GameEntryConfirmationPopup: React.FC<GameEntryConfirmationPopupProp
                 </Animated.View>
               </View>
               <Text style={styles.completeText}>
-                Play your stableford competition on the date you selected and enter your score in the Stable Stakes app when prompted.
+                Your game has been updated. Play your stableford competition on the date you selected and enter your score in the Stable Stakes app when prompted.
               </Text>
               <PrimaryButton
                 title="Close"
-                onPress={onClose}
+                onPress={handleClose}
                 isActive={true}
                 style={styles.primaryButton}
               />
-            </>
+            </View>
+          ) : (
+            <Animated.View style={[styles.popup, { transform: [{ translateY: slideAnim }] }] }>
+              <Text style={styles.title}>GAME UPDATE</Text>
+              <View style={styles.completeContainer}>
+                <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
+                  <Image source={require('../../../assets/icons/deposit-tick.png')} style={styles.tickIcon} />
+                  {smallCircles.map((circle, i) => (
+                    <Animated.View
+                      key={i}
+                      style={[
+                        styles.smallCircle,
+                        smallCircleStyles[i],
+                        { transform: [{ scale: circle }] }
+                      ]}
+                    />
+                  ))}
+                </Animated.View>
+              </View>
+              <Text style={styles.completeText}>
+                Your game has been updated. Play your stableford competition on the date you selected and enter your score in the Stable Stakes app when prompted.
+              </Text>
+              <PrimaryButton
+                title="Close"
+                onPress={handleClose}
+                isActive={true}
+                style={styles.primaryButton}
+              />
+            </Animated.View>
           )}
-        </Animated.View>
+        </View>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal
+      visible={disableInternalAnimation ? isVisible : internalVisible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={handleClose}
+    >
+      <View style={styles.overlay}>
+        {disableInternalAnimation ? (
+          <View style={styles.popup}>
+            {/* Close button for edit mode */}
+            {isEditMode && (
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleClose}
+                hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              >
+                <Image
+                  source={require('../../../assets/icons/navigation/close.png')}
+                  style={styles.closeIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+            {!complete ? (
+              <>
+                <Text style={styles.title}>GAME SUMMARY</Text>
+                <View style={[styles.infoBoxesContainer, { marginTop: isEditMode ? scaleHeight(25) : scaleHeight(5) }]}> 
+                  <View style={styles.infoBoxRow}>
+                    <Text style={styles.infoLabel}>Club</Text>
+                    <Text style={styles.infoValue}>{clubName}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Required Score</Text>
+                    <Text style={styles.infoValue}>{requiredScore}+</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Stake</Text>
+                    <Text style={styles.infoValue}>£{stake}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Comp Date</Text>
+                    <Text style={styles.infoValue}>{compDate}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder, { borderBottomWidth: 1, borderColor: '#18302A' }]}> 
+                    <Text style={styles.infoLabel}>Potential Return</Text>
+                    <Text style={styles.infoValue}>£{potentialReturn}</Text>
+                  </View>
+                </View>
+                {!isEditMode && (
+                  <Text style={styles.termsText}>
+                    By confirming you agree to abide by the rules and regulations set out in our Terms of Use.
+                  </Text>
+                )}
+                <View style={styles.buttonContainer}>
+                  {showEditButtons ? (
+                    <>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.cancelButton]} 
+                        onPress={handleCancel}
+                      >
+                        <Text style={styles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.editButton]} 
+                        onPress={onConfirm}
+                      >
+                        <Text style={styles.buttonText}>Edit</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.backButton]} 
+                        onPress={onBack}
+                        disabled={processing}
+                      >
+                        <Text style={styles.buttonText}>Back</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.confirmButton, processing && { opacity: 0.7 }]} 
+                        onPress={handleConfirm}
+                        disabled={processing}
+                      >
+                        <Text style={styles.buttonText}>{processing ? 'Processing...' : 'Confirm'}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </>
+            ) : complete ? (
+              <>
+                <Text style={styles.title}>{isEditMode ? 'GAME UPDATE' : 'YOU ARE IN'}</Text>
+                <View style={styles.completeContainer}>
+                  <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
+                    <Image source={require('../../../assets/icons/deposit-tick.png')} style={styles.tickIcon} />
+                    {smallCircles.map((circle, i) => (
+                      <Animated.View
+                        key={i}
+                        style={[
+                          styles.smallCircle,
+                          smallCircleStyles[i],
+                          { transform: [{ scale: circle }] }
+                        ]}
+                      />
+                    ))}
+                  </Animated.View>
+                </View>
+                <Text style={styles.completeText}>
+                  Play your stableford competition on the date you selected and enter your score in the Stable Stakes app when prompted.
+                </Text>
+                <PrimaryButton
+                  title="Close"
+                  onPress={handleClose}
+                  isActive={true}
+                  style={styles.primaryButton}
+                />
+              </>
+            ) : null}
+          </View>
+        ) : (
+          <Animated.View 
+            style={[
+              styles.popup,
+              {
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            {/* Close button for edit mode */}
+            {isEditMode && (
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleClose}
+                hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              >
+                <Image
+                  source={require('../../../assets/icons/navigation/close.png')}
+                  style={styles.closeIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            )}
+            {!complete ? (
+              <>
+                <Text style={styles.title}>GAME SUMMARY</Text>
+                <View style={[styles.infoBoxesContainer, { marginTop: isEditMode ? scaleHeight(25) : scaleHeight(5) }]}> 
+                  <View style={styles.infoBoxRow}>
+                    <Text style={styles.infoLabel}>Club</Text>
+                    <Text style={styles.infoValue}>{clubName}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Required Score</Text>
+                    <Text style={styles.infoValue}>{requiredScore}+</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Stake</Text>
+                    <Text style={styles.infoValue}>£{stake}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder]}>
+                    <Text style={styles.infoLabel}>Comp Date</Text>
+                    <Text style={styles.infoValue}>{compDate}</Text>
+                  </View>
+                  <View style={[styles.infoBoxRow, styles.infoBoxBorder, { borderBottomWidth: 1, borderColor: '#18302A' }]}> 
+                    <Text style={styles.infoLabel}>Potential Return</Text>
+                    <Text style={styles.infoValue}>£{potentialReturn}</Text>
+                  </View>
+                </View>
+                {!isEditMode && (
+                  <Text style={styles.termsText}>
+                    By confirming you agree to abide by the rules and regulations set out in our Terms of Use.
+                  </Text>
+                )}
+                <View style={styles.buttonContainer}>
+                  {showEditButtons ? (
+                    <>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.cancelButton]} 
+                        onPress={handleCancel}
+                      >
+                        <Text style={styles.buttonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.editButton]} 
+                        onPress={onConfirm}
+                      >
+                        <Text style={styles.buttonText}>Edit</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.backButton]} 
+                        onPress={onBack}
+                        disabled={processing}
+                      >
+                        <Text style={styles.buttonText}>Back</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.button, styles.confirmButton, processing && { opacity: 0.7 }]} 
+                        onPress={handleConfirm}
+                        disabled={processing}
+                      >
+                        <Text style={styles.buttonText}>{processing ? 'Processing...' : 'Confirm'}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </>
+            ) : complete ? (
+              <>
+                <Text style={styles.title}>{isEditMode ? 'GAME UPDATE' : 'YOU ARE IN'}</Text>
+                <View style={styles.completeContainer}>
+                  <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
+                    <Image source={require('../../../assets/icons/deposit-tick.png')} style={styles.tickIcon} />
+                    {smallCircles.map((circle, i) => (
+                      <Animated.View
+                        key={i}
+                        style={[
+                          styles.smallCircle,
+                          smallCircleStyles[i],
+                          { transform: [{ scale: circle }] }
+                        ]}
+                      />
+                    ))}
+                  </Animated.View>
+                </View>
+                <Text style={styles.completeText}>
+                  Play your stableford competition on the date you selected and enter your score in the Stable Stakes app when prompted.
+                </Text>
+                <PrimaryButton
+                  title="Close"
+                  onPress={handleClose}
+                  isActive={true}
+                  style={styles.primaryButton}
+                />
+              </>
+            ) : null}
+          </Animated.View>
+        )}
+
+        {showCancelConfirm && (
+          <Animated.View 
+            style={[
+              styles.bottomSheet,
+              {
+                transform: [{ translateY: bottomSheetAnim }]
+              }
+            ]}
+          >
+            <View style={styles.bottomSheetContent}>
+              <Text style={styles.bottomSheetHeader}>
+                {gameCancelled ? 'GAME CANCELLED' : 'CANCEL GAME?'}
+              </Text>
+              <Text style={styles.bottomSheetBody}>
+                {gameCancelled ? 'Your game has been cancelled.' : 'Are you sure you want to cancel this game?'}
+              </Text>
+              {!gameCancelled && (
+                <View style={styles.bottomSheetButtons}>
+                  <TouchableOpacity 
+                    style={[styles.button, styles.cancelButton, { marginRight: scaleWidth(10) }]} 
+                    onPress={handleCancelConfirm}
+                  >
+                    <Text style={styles.buttonText}>Yes</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.button, styles.confirmButton]} 
+                    onPress={handleCancelReject}
+                  >
+                    <Text style={styles.buttonText}>No</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {gameCancelled && (
+                <PrimaryButton
+                  title="Close"
+                  onPress={handleClose}
+                  isActive={true}
+                  style={styles.primaryButton}
+                />
+              )}
+            </View>
+          </Animated.View>
+        )}
       </View>
     </Modal>
   );
@@ -219,6 +554,57 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#E3E3E3',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: scaleWidth(20),
+    minHeight: scaleHeight(200),
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  bottomSheetContent: {
+    alignItems: 'center',
+    paddingBottom: scaleHeight(20),
+  },
+  bottomSheetHeader: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(16),
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: scaleHeight(25.648),
+    marginBottom: scaleHeight(8),
+  },
+  bottomSheetBody: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(12),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(19.2),
+    marginBottom: scaleHeight(20),
+  },
+  bottomSheetButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  },
   title: {
     fontSize: scaleWidth(22),
     fontWeight: '900',
@@ -228,7 +614,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.22,
     textTransform: 'uppercase',
-    marginTop: scaleHeight(23),
+    marginTop: scaleHeight(43),
     marginBottom: scaleHeight(5),
     lineHeight: undefined,
   },
@@ -282,32 +668,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: scaleHeight(10),
+    marginTop: scaleHeight(5),
     gap: scaleWidth(10),
   },
   button: {
+    display: 'flex',
     width: scaleWidth(140),
     height: scaleHeight(40),
+    paddingVertical: scaleHeight(8),
+    paddingHorizontal: scaleWidth(15),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 100,
+    gap: scaleWidth(10),
+    flexShrink: 0,
+    borderRadius: scaleWidth(100),
+  },
+  backButton: {
+    backgroundColor: '#E3E3E3',
+    borderWidth: 1,
+    borderColor: '#4EDD69',
+    borderRadius: scaleWidth(100),
+  },
+  confirmButton: {
+    backgroundColor: '#4EDD69',
   },
   cancelButton: {
     backgroundColor: '#E3E3E3',
     borderWidth: 1,
     borderColor: '#4EDD69',
   },
-  confirmButton: {
+  editButton: {
     backgroundColor: '#4EDD69',
   },
   buttonText: {
     color: '#18302A',
-    fontSize: scaleWidth(14),
-    fontWeight: '600',
     fontFamily: 'Poppins',
-    fontStyle: 'italic',
-    letterSpacing: -0.42,
+    fontSize: scaleWidth(14),
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: scaleHeight(20),
     textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   completeContainer: {
     alignItems: 'center',
@@ -355,5 +757,19 @@ const styles = StyleSheet.create({
     width: scaleWidth(300),
     height: scaleHeight(40),
     alignSelf: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: scaleHeight(16),
+    right: scaleWidth(16),
+    zIndex: 10,
+    width: scaleWidth(32),
+    height: scaleWidth(32),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeIcon: {
+    width: scaleWidth(29),
+    height: scaleWidth(29),
   },
 }); 

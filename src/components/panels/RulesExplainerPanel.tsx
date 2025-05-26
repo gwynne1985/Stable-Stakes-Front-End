@@ -109,8 +109,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: scaleHeight(90),
-    borderBottomLeftRadius: scaleWidth(20),
-    borderBottomRightRadius: scaleWidth(20),
   },
   textContainer: {
     padding: scaleWidth(20),

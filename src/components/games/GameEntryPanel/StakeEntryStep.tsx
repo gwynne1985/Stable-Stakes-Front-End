@@ -18,6 +18,7 @@ interface StakeEntryStepProps {
   onClose?: () => void;
   game: any;
   potentialReturn: number;
+  isEditMode?: boolean;
 }
 
 const stakeOptions = [10, 20, 50];
@@ -35,6 +36,7 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
   onClose,
   game,
   potentialReturn,
+  isEditMode = false,
 }) => {
   const multiplier = multipliers[targetScore];
   const [infoVisible, setInfoVisible] = useState(false);
@@ -44,23 +46,40 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
   const calculatedPotentialReturn = selectedStake ? selectedStake * multiplier : 0;
 
   // Highlight color for the plus and border
-  const highlightColor =
-    targetScore === 34 ? '#4EDDA9' : targetScore === 37 ? '#4EDD69' : '#93DD4E';
+  const highlightColor = '#4EDD69';
+
+  // DEBUG: Log targetScore, selectedStake, and stakeOptions for troubleshooting
+  React.useEffect(() => {
+    console.log('[StakeEntryStep] targetScore:', targetScore, 'selectedStake:', selectedStake, 'stakeOptions:', stakeOptions);
+  }, [targetScore, selectedStake]);
 
   return (
     <View style={styles.container}>
       {/* Stake options vertically stacked */}
       <View style={styles.stakeOptionsColumn}>
-        {stakeOptions.map((amount) => (
-          <TouchableOpacity
-            key={amount}
-            style={[styles.stakeOption, selectedStake === amount && styles.stakeOptionSelected]}
-            onPress={() => setSelectedStake(amount)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.stakeOptionText}>{`£${amount}`}</Text>
-          </TouchableOpacity>
-        ))}
+        {stakeOptions.map((amount) => {
+          // DEBUG: Log types for comparison
+          console.log('[StakeEntryStep] amount:', amount, typeof amount, 'selectedStake:', selectedStake, typeof selectedStake);
+          return (
+            <TouchableOpacity
+              key={amount}
+              style={[
+                styles.stakeOption,
+                selectedStake === amount && {
+                  backgroundColor: highlightColor,
+                  borderColor: highlightColor,
+                }
+              ]}
+              onPress={() => setSelectedStake(amount)}
+              activeOpacity={0.85}
+            >
+              <Text style={[
+                styles.stakeOptionText,
+                { color: '#18302A' }
+              ]}>{`£${amount}`}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <View style={[styles.walletInfoBox, { marginTop: scaleHeight(50) }]}>
         <View style={styles.potentialLeft}>
@@ -97,6 +116,7 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
       <PrimaryButton
         title="Next"
         onPress={() => {
+          console.log('[StakeEntryStep] Next button pressed, calling onNext');
           // Always call onNext for debugging
           if (onNext) onNext();
         }}

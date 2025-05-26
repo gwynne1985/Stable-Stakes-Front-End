@@ -1,19 +1,15 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { Image, StyleSheet, Text } from 'react-native';
 import { TabParamList } from './index';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { GamesScreen } from '../screens/Games';
 import { WalletScreen } from '../screens/Wallet';
 import { MyGamesScreen } from '../screens/MyGames';
 import { ProShopScreen } from '../screens/ProShop';
-import { Image, StyleSheet, Text } from 'react-native';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export const TabNavigator = () => {
-  const navigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
-
   return (
     <Tab.Navigator
       screenOptions={{
@@ -44,7 +40,7 @@ export const TabNavigator = () => {
         component={GamesScreen} 
         options={{
           title: 'Games',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) => (
             <Image
               source={focused 
                 ? require('../../assets/icons/navigation/flag-navactive.png')
@@ -61,7 +57,7 @@ export const TabNavigator = () => {
         component={WalletScreen} 
         options={{
           title: 'Wallet',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) => (
             <Image
               source={focused 
                 ? require('../../assets/icons/navigation/wallet-navactive.png')
@@ -78,7 +74,7 @@ export const TabNavigator = () => {
         component={MyGamesScreen} 
         options={{
           title: 'Your Games',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) => (
             <Image
               source={focused 
                 ? require('../../assets/icons/navigation/yourgames-navactive.png')
@@ -95,7 +91,7 @@ export const TabNavigator = () => {
         component={ProShopScreen} 
         options={{
           title: 'Pro Shop',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) => (
             <Image
               source={focused 
                 ? require('../../assets/icons/navigation/proshop-navactive.png')

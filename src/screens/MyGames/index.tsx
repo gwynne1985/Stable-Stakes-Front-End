@@ -11,7 +11,7 @@ export const MyGamesScreen = () => {
     <PageContainer title="Your Games" variant="light" notificationCount={2}>
       <View style={styles.container}>
         <StatsRow />
-        <TabHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabHeader activeTab={activeTab} onTabChange={tab => setActiveTab(tab as 'Upcoming' | 'Complete')} tabLabels={['Upcoming', 'Complete']} />
         <UpcomingGamesSection activeTab={activeTab} />
       </View>
     </PageContainer>

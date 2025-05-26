@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
@@ -81,6 +82,8 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
                   placeholder=""
                   selectionColor="#18302A"
                   autoFocus={i === 0}
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
                 />
               </View>
             ))}
@@ -91,6 +94,10 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
             isActive={isValidCode}
             style={styles.nextButton}
           />
+          <View style={{ height: 20 }} />
+          <TouchableOpacity style={styles.resendButton}>
+            <Text style={styles.resendButtonText}>Resend Code</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -165,5 +172,30 @@ const styles = StyleSheet.create({
   nextButton: {
     marginTop: scaleHeight(24),
     width: '100%',
+  },
+  resendButton: {
+    display: 'flex',
+    width: scaleWidth(300),
+    height: scaleHeight(40),
+    paddingVertical: scaleHeight(8),
+    paddingHorizontal: scaleWidth(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: scaleWidth(25),
+    flexShrink: 0,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: '#4EDD69',
+    backgroundColor: '#E3E3E3',
+  },
+  resendButtonText: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: undefined,
+    letterSpacing: scaleWidth(-0.42),
   },
 }); 

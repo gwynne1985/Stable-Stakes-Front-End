@@ -10,6 +10,7 @@ import {
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
 import { InputField } from '../InputField';
+import { SimpleSlidingPanel } from '../panels/SimpleSlidingPanel';
 
 interface EmailStepProps {
   email: string;
@@ -27,7 +28,10 @@ export const EmailStep: React.FC<EmailStepProps> = ({
   const [isValidEmail, setIsValidEmail] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [blurFired, setBlurFired] = useState(false);
-  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeout = useRef<any>(null);
+  const [isEmailTaken, setIsEmailTaken] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   // Debounced validation
   useEffect(() => {
@@ -47,9 +51,16 @@ export const EmailStep: React.FC<EmailStepProps> = ({
     setIsValidEmail(emailRegex.test(text));
   };
 
-  const handleBlur = () => {
+  const handleBlur = async () => {
     setShowValidation(true);
     setBlurFired(true);
+    // TODO: Replace this with real backend check
+    // Simulate async check for email already in use
+    if (email === 'taken@example.com') {
+      setIsEmailTaken(true);
+    } else {
+      setIsEmailTaken(false);
+    }
   };
 
   const shouldShowError = showValidation && email.length > 0 && !isValidEmail;
@@ -65,11 +76,12 @@ export const EmailStep: React.FC<EmailStepProps> = ({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!showPrivacy && !showTerms}
       >
         <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
           <Text style={styles.header}>ENTER EMAIL</Text>
           <Text style={styles.verificationText}>
-            We'll send a verification codeto your Inbox to confirm your email address.
+            We'll send a verification code to your Inbox to confirm your email address.
           </Text>
           <View style={styles.inputContainer}>
             <InputField
@@ -85,15 +97,21 @@ export const EmailStep: React.FC<EmailStepProps> = ({
               textContentType="emailAddress"
               autoCorrect={false}
               spellCheck={false}
-              isInvalid={shouldShowError}
-              isValid={isValidEmail}
-              errorMessage={shouldShowError ? 'Enter a valid email' : undefined}
+              isInvalid={shouldShowError || isEmailTaken}
+              isValid={isValidEmail && !isEmailTaken}
+              errorMessage={
+                shouldShowError
+                  ? 'Enter a valid email'
+                  : isEmailTaken
+                    ? 'This email is already in use'
+                    : undefined
+              }
             />
           </View>
           <Text style={styles.legalCopy}>
             By continuing, I agree to Stable Stakes{' '}
-            <Text style={styles.legalLink}>Privacy Policy</Text> and{' '}
-            <Text style={styles.legalLink}>Terms of Use</Text>.
+            <Text style={styles.legalLink} onPress={() => setShowPrivacy(true)}>Privacy Policy</Text> and{' '}
+            <Text style={styles.legalLink} onPress={() => setShowTerms(true)}>Terms of Use</Text>.
           </Text>
           <PrimaryButton
             title="Next"
@@ -102,6 +120,24 @@ export const EmailStep: React.FC<EmailStepProps> = ({
             style={styles.nextButton}
           />
         </View>
+        <SimpleSlidingPanel
+          isVisible={showPrivacy}
+          title="Privacy Policy"
+          onClose={() => setShowPrivacy(false)}
+        >
+          <Text style={{ padding: 20 }}>
+            Dummy Privacy Policy: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Sed euismod, nunc ut laoreet dictum, urna massa dictum enim, at cursus enim sapien eget urna.
+          </Text>
+        </SimpleSlidingPanel>
+        <SimpleSlidingPanel
+          isVisible={showTerms}
+          title="Terms of Use"
+          onClose={() => setShowTerms(false)}
+        >
+          <Text style={{ padding: 20 }}>
+            Dummy Terms of Use: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Sed euismod, nunc ut laoreet dictum, urna massa dictum enim, at cursus enim sapien eget urna.
+          </Text>
+        </SimpleSlidingPanel>
       </ScrollView>
     </KeyboardAvoidingView>
   );

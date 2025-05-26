@@ -10,6 +10,7 @@ import {
   Image as RNImage,
   Platform,
   Alert,
+  PanResponder,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
@@ -116,7 +117,9 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
   const [keepPanels, setKeepPanels] = useState(false);
   const [postAnimationCleanup, setPostAnimationCleanup] = useState(false);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
+  const [showButtons, setShowButtons] = useState(false);
   const slideX = useRef(new Animated.Value(0)).current;
+  const buttonsOpacity = useRef(new Animated.Value(0)).current;
 
   // Animation refs for first panel (must be top-level)
   const titleAnim = useRef(new Animated.Value(-SCREEN_WIDTH)).current;
@@ -136,12 +139,53 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
   // Add an array for the different dot sizes
   const smallCircleSizes = [scaleWidth(28), scaleWidth(20), scaleWidth(24), scaleWidth(16), scaleWidth(22)];
 
+  // --- Add PanResponder for horizontal swipe navigation ---
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal swipes, with a lower threshold
+        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 5;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (animating) return;
+        // Move the content with the gesture
+        slideX.setValue(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (animating) return;
+        
+        // Lower threshold for more responsive swipes
+        const SWIPE_THRESHOLD = 30;
+        
+        // Swipe left (next)
+        if (gestureState.dx < -SWIPE_THRESHOLD && currentStep < TOTAL_STEPS) {
+          handleNext();
+        }
+        // Swipe right (back)
+        else if (gestureState.dx > SWIPE_THRESHOLD && currentStep > 1) {
+          handleBack();
+        } else {
+          // Reset position if swipe wasn't strong enough
+          Animated.spring(slideX, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 40,
+            friction: 5,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
   useEffect(() => {
     if (currentStep === 1) {
       // Reset values for re-entry
       titleAnim.setValue(-SCREEN_WIDTH);
       logoAnim.setValue(SCREEN_WIDTH);
       descAnim.setValue(0);
+      buttonsOpacity.setValue(0);
+      setShowButtons(false);
 
       // First animate the title
       Animated.timing(titleAnim, {
@@ -161,12 +205,20 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
               toValue: 1,
               duration: 400,
               useNativeDriver: true,
-            }).start();
+            }).start(() => {
+              // After description fades in, show and fade in the buttons
+              setShowButtons(true);
+              Animated.timing(buttonsOpacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+              }).start();
+            });
           }, 300);
         });
       });
     }
-  }, [currentStep, titleAnim, logoAnim, descAnim]);
+  }, [currentStep, titleAnim, logoAnim, descAnim, buttonsOpacity]);
 
   // Animate green tick and dots when panel 8 is shown
   useEffect(() => {
@@ -206,11 +258,11 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
   ];
 
   // Helper to render a single step panel
-  const renderStepPanel = (stepIdx: number) => {
+  const renderStepPanel = (stepIdx: number, panelRole: string = '') => {
     // Panel 1: onboarding welcome
     if (stepIdx === 1) {
       return (
-        <View style={styles.animatedContent} key={stepIdx}>
+        <View style={styles.animatedContent} key={`${panelRole}-${stepIdx}`}>
           <Animated.View style={{
             transform: [{ translateX: titleAnim }],
             marginTop: scaleHeight(110),
@@ -244,6 +296,27 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
               In the meantime, explore Stable Stakes so you're ready to go as soon as your account is active.
             </Text>
           </Animated.View>
+          {showButtons && (
+            <Animated.View style={{
+              opacity: buttonsOpacity,
+              marginTop: scaleHeight(40),
+              width: '100%',
+              alignItems: 'center',
+            }}>
+              <TouchableOpacity 
+                style={styles.tourButton}
+                onPress={handleNext}
+              >
+                <Text style={styles.tourButtonText}>Take a tour</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.homeButton}
+                onPress={() => rootNavigation.navigate('MainApp', { screen: 'GamesScreen' })}
+              >
+                <Text style={styles.homeButtonText}>Go to Home Screen</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
         </View>
       );
     }
@@ -251,20 +324,43 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
     if (stepIdx >= 2 && stepIdx <= 7) {
       const rule = RULES_CONTENT[stepIdx - 2];
       return (
-        <View style={styles.animatedContent} key={stepIdx}>
-          <Text style={styles.titleAbsolute}>{rule.title}</Text>
-          <View style={styles.ruleCardContainer}>
-            <View style={styles.ruleCard}>
-              <View style={styles.ruleImageContainer}>
-                <Image
-                  source={rule.image}
-                  style={styles.ruleImage}
-                  resizeMode="cover"
+        <View style={styles.animatedContent} key={`${panelRole}-${stepIdx}`}>
+          {/* Full-width, top-half image */}
+          <Image
+            source={rule.image}
+            style={styles.onboardingFullImage}
+            resizeMode="cover"
+          />
+          {/* Overlayed white content card */}
+          <View style={styles.onboardingContentCard}>
+            <Text style={styles.onboardingTitle}>{rule.title}</Text>
+            <Text style={styles.onboardingDescription}>{rule.description}</Text>
+            {/* Button inside card */}
+            <View style={styles.buttonBoxOnboarding}>
+              <PrimaryButton
+                title={
+                  stepIdx === 2 
+                    ? "Take a tour" 
+                    : stepIdx === 7 
+                      ? "Enable Notifications" 
+                      : "Next"
+                }
+                onPress={handleNext}
+                isActive={true}
+                style={styles.button}
+              />
+            </View>
+            {/* Progress bar below button */}
+            <View style={styles.progressContainerOnboarding}>
+              {[...Array(6)].map((_, index) => (
+                <View
+                  key={`progress-${stepIdx}-${index}`}
+                  style={[
+                    styles.progressIndicatorOnboarding,
+                    index + 1 === stepIdx - 1 ? styles.currentStepOnboarding : styles.otherStepOnboarding,
+                  ]}
                 />
-              </View>
-              <View style={styles.ruleTextContainer}>
-                <Text style={styles.ruleDescription}>{rule.description}</Text>
-              </View>
+              ))}
             </View>
           </View>
         </View>
@@ -273,7 +369,7 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
     // Panel 8: onboarding end
     if (stepIdx === 8) {
       return (
-        <View style={styles.animatedContent} key={stepIdx}>
+        <View style={styles.animatedContent} key={`${panelRole}-${stepIdx}`}>
           <View style={[styles.contentBox, { marginTop: scaleHeight(100) }]}>
             <View style={styles.completeContainer}>
               <Animated.View style={[styles.bigCircle, { transform: [{ scale: bigCircleScale }] }]}> 
@@ -391,9 +487,9 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
       setAnimating(true);
       setDirection('back');
       setTargetStep(currentStep - 1);
-      slideX.setValue(-SCREEN_WIDTH);
+      slideX.setValue(0); // Start from current position
       Animated.timing(slideX, {
-        toValue: 0,
+        toValue: SCREEN_WIDTH, // Animate to the right
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
@@ -422,40 +518,26 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
   let rowTranslateX: Animated.AnimatedValue | Animated.AnimatedInterpolation<number> = slideX;
   if (animating && direction === 'next' && targetStep) {
     panels = [
-      renderStepPanel(currentStep),
-      renderStepPanel(targetStep),
+      renderStepPanel(currentStep, 'current'),
+      renderStepPanel(targetStep, 'target'),
     ];
     rowTranslateX = slideX;
   } else if (animating && direction === 'back' && targetStep) {
     panels = [
-      renderStepPanel(targetStep),
-      renderStepPanel(currentStep),
+      renderStepPanel(targetStep, 'target'),
+      renderStepPanel(currentStep, 'current'),
     ];
-    rowTranslateX = slideX;
+    rowTranslateX = slideX.interpolate({
+      inputRange: [0, SCREEN_WIDTH],
+      outputRange: [0, -SCREEN_WIDTH],
+    });
   } else {
     panels = [
-      renderStepPanel(currentStep),
+      renderStepPanel(currentStep, 'current'),
       <View style={styles.animatedContent} key="empty" />,
     ];
-    rowTranslateX = new Animated.Value(0);
+    rowTranslateX = slideX;
   }
-
-  const renderProgressBar = () => {
-    if (currentStep === 1 || currentStep === TOTAL_STEPS) return null;
-    return (
-      <View style={styles.progressContainer}>
-        {[...Array(6)].map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.progressIndicator,
-              index + 1 === currentStep - 1 ? styles.currentStep : styles.otherStep,
-            ]}
-          />
-        ))}
-      </View>
-    );
-  };
 
   return (
     <View style={[styles.container, { display: isVisible ? 'flex' : 'none' }]}> 
@@ -463,7 +545,7 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
         source={require('C:/Users/rhysg/Stable Stakes Front End/assets/images/golf-course.jpg')} 
         style={styles.backgroundImage}
       />
-      <View style={styles.overlay}>
+      <View style={styles.overlay} {...panResponder.panHandlers}>
         {currentStep > 1 && (
           <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.7}>
             <RNImage
@@ -482,23 +564,6 @@ export const OnboardingPanel: React.FC<OnboardingPanelProps> = ({
         >
           {panels}
         </Animated.View>
-        <View style={styles.buttonContainer}>
-          <View style={styles.buttonBox}>
-            <PrimaryButton
-              title={
-                currentStep === 1 
-                  ? "Take a tour" 
-                  : currentStep === TOTAL_STEPS 
-                    ? "Enable Notifications" 
-                    : "Next"
-              }
-              onPress={handleNext}
-              isActive={true}
-              style={styles.button}
-            />
-          </View>
-        </View>
-        {renderProgressBar()}
       </View>
     </View>
   );
@@ -618,14 +683,19 @@ const styles = StyleSheet.create({
   },
   ruleImageContainer: {
     position: 'relative',
-    width: '100%',
-    height: scaleHeight(225), // scale up from 180
+    width: scaleWidth(360),
+    height: scaleHeight(500),
+    marginLeft: 0,
+    marginRight: 0,
+    marginTop: 0,
+    alignSelf: 'flex-start',
   },
   ruleImage: {
-    width: '100%',
-    height: scaleHeight(225),
-    borderTopLeftRadius: scaleWidth(20),
-    borderTopRightRadius: scaleWidth(20),
+    width: scaleWidth(360),
+    height: scaleHeight(500),
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    alignSelf: 'flex-start',
   },
   ruleTextContainer: {
     padding: scaleWidth(20),
@@ -734,5 +804,129 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: scaleHeight(20),
+  },
+  onboardingFullImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: scaleWidth(360),
+    height: scaleHeight(389 + 150), // 150px taller
+    zIndex: 1,
+  },
+  onboardingContentCard: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    width: scaleWidth(360),
+    minHeight: scaleHeight(300),
+    backgroundColor: '#E3E3E3',
+    borderTopLeftRadius: scaleWidth(32),
+    borderTopRightRadius: scaleWidth(32),
+    paddingTop: scaleHeight(36),
+    paddingHorizontal: scaleWidth(24),
+    alignItems: 'center',
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  onboardingTitle: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(22),
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: scaleHeight(34),
+    textTransform: 'uppercase',
+    marginBottom: scaleHeight(12),
+  },
+  onboardingDescription: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(13),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(20.839),
+    marginBottom: scaleHeight(24),
+  },
+  progressContainerOnboarding: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: scaleWidth(8),
+    marginTop: scaleHeight(12),
+    marginBottom: scaleHeight(16),
+    width: '100%',
+  },
+  progressIndicatorOnboarding: {
+    height: scaleHeight(5.364),
+    borderRadius: scaleWidth(10),
+    backgroundColor: '#18302A',
+  },
+  currentStepOnboarding: {
+    width: scaleWidth(24.136),
+    backgroundColor: '#18302A',
+  },
+  otherStepOnboarding: {
+    width: scaleWidth(5.364),
+    backgroundColor: '#18302A',
+    opacity: 0.3,
+  },
+  buttonBoxOnboarding: {
+    width: scaleWidth(300),
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginTop: scaleHeight(8),
+  },
+  tourButton: {
+    display: 'flex',
+    width: scaleWidth(300),
+    height: scaleHeight(40),
+    padding: scaleHeight(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: scaleWidth(25),
+    flexShrink: 0,
+    borderRadius: scaleWidth(100),
+    backgroundColor: '#4EDD69',
+    marginBottom: scaleHeight(12),
+  },
+  tourButtonText: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: undefined,
+    letterSpacing: scaleWidth(-0.42),
+  },
+  homeButton: {
+    display: 'flex',
+    width: scaleWidth(300),
+    height: scaleHeight(40),
+    padding: scaleHeight(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: scaleWidth(25),
+    flexShrink: 0,
+    borderRadius: scaleWidth(100),
+    borderWidth: 1,
+    borderColor: '#4EDD69',
+    backgroundColor: '#E3E3E3',
+  },
+  homeButtonText: {
+    color: '#18302A',
+    textAlign: 'center',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(14),
+    fontStyle: 'normal',
+    fontWeight: '600',
+    lineHeight: undefined,
+    letterSpacing: scaleWidth(-0.42),
   },
 }); 

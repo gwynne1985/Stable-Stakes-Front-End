@@ -3,27 +3,24 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
 
 interface TabHeaderProps {
-  activeTab: 'Upcoming' | 'Complete';
-  onTabChange: (tab: 'Upcoming' | 'Complete') => void;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  tabLabels: string[];
 }
 
-export const TabHeader: React.FC<TabHeaderProps> = ({ activeTab, onTabChange }) => {
+export const TabHeader: React.FC<TabHeaderProps> = ({ activeTab, onTabChange, tabLabels }) => {
   return (
     <View style={styles.tabRow}>
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'Upcoming' ? styles.activeTab : styles.inactiveTab]}
-        onPress={() => onTabChange('Upcoming')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.tabText}>Upcoming</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.tab, activeTab === 'Complete' ? styles.activeTab : styles.inactiveTab]}
-        onPress={() => onTabChange('Complete')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.tabText}>Complete</Text>
-      </TouchableOpacity>
+      {tabLabels.map(label => (
+        <TouchableOpacity
+          key={label}
+          style={[styles.tab, activeTab === label ? styles.activeTab : styles.inactiveTab]}
+          onPress={() => onTabChange(label)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.tabText}>{label}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 };

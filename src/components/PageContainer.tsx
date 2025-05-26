@@ -20,6 +20,7 @@ interface Props {
   children: React.ReactNode;
   variant?: 'dark' | 'light';
   notificationCount?: number;
+  hasUnreadNotifications?: boolean;
 }
 
 export const PageContainer: React.FC<Props> = ({
@@ -27,6 +28,7 @@ export const PageContainer: React.FC<Props> = ({
   children,
   variant = 'light',
   notificationCount = 0,
+  hasUnreadNotifications = false,
 }) => {
   const [isAccountPanelVisible, setIsAccountPanelVisible] = useState(false);
   const [isNotificationPanelVisible, setIsNotificationPanelVisible] = useState(false);
@@ -62,12 +64,8 @@ export const PageContainer: React.FC<Props> = ({
                 source={require('../../assets/icons/navigation/notifications.png')}
                 style={styles.notificationIcon}
               />
-              {notificationCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationText}>
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </Text>
-                </View>
+              {hasUnreadNotifications && (
+                <View style={styles.notificationBadge} />
               )}
             </View>
           </TouchableOpacity>
@@ -100,7 +98,7 @@ export const PageContainer: React.FC<Props> = ({
 
       <SimpleSlidingPanel
         isVisible={isNotificationPanelVisible}
-        title="Notifications"
+        title="Inbox"
         onClose={() => setIsNotificationPanelVisible(false)}
       >
         <NotificationsStep onClose={() => setIsNotificationPanelVisible(false)} />
@@ -156,11 +154,11 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    right: -5,
-    top: -5,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    right: 0,
+    top: 3,
+    width: 16 * 0.7,
+    height: 16 * 0.7,
+    borderRadius: 8 * 0.7,
     backgroundColor: '#FE606E',
     justifyContent: 'center',
     alignItems: 'center',

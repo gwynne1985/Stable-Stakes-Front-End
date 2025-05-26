@@ -32,9 +32,13 @@ interface GameEntrySlidingPanelProps {
   onClose: () => void;
   targetScore: 34 | 37 | 40;
   walletBalance: number;
+  initialStake?: number;
+  initialDate?: string;
+  onConfirm?: () => void;
+  isEditMode?: boolean;
 }
 
-const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string) => void }> = ({ onBack, onNext }) => {
+const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string) => void; initialDate?: string }> = ({ onBack, onNext, initialDate }) => {
   const [selected, setSelected] = React.useState<number | 'other' | null>(null);
   const [calendarVisible, setCalendarVisible] = React.useState(false);
   const [otherDate, setOtherDate] = React.useState<Date | null>(null);
@@ -61,6 +65,36 @@ const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string
       suffix,
     };
   });
+
+  // Pre-select chip or other date if initialDate is provided
+  React.useEffect(() => {
+    if (!initialDate) return;
+    const parsedInitial = new Date(initialDate);
+    console.log('[CompDateEntryStep] initialDate:', initialDate, 'parsedInitial:', parsedInitial, 'parsedInitial.toDateString():', parsedInitial.toDateString());
+    chips.forEach((chip, i) => {
+      if (chip.date) {
+        console.log(`[CompDateEntryStep] chip[${i}].date:`, chip.date, 'chip[${i}].date.toDateString():', chip.date.toDateString(), 'chip.value:', chip.value);
+      }
+    });
+    if (isNaN(parsedInitial.getTime())) return; // Invalid date, do nothing
+    let found = false;
+    for (let i = 1; i <= 6; i++) { // Only check chips 1-6 for date match
+      if (typeof chips[i].value === 'number' && chips[i].date!.toDateString() === parsedInitial.toDateString()) {
+        setSelected(chips[i].value as number);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      setSelected('other' as 'other');
+      setOtherDate(parsedInitial);
+    }
+  }, [initialDate]);
+
+  // DEBUG: Log chips array
+  React.useEffect(() => {
+    console.log('[CompDateEntryStep] Chips array:', chips);
+  }, [chips]);
 
   // Get selected date string
   let selectedDateStr = '';
@@ -219,7 +253,7 @@ const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string
         onClose={() => setCalendarVisible(false)}
         onDateSelected={(date: Date) => {
           setOtherDate(date);
-          setSelected('other');
+          setSelected('other' as 'other');
           setCalendarVisible(false);
         }}
         initialDate={otherDate || undefined}
@@ -233,17 +267,51 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
   onClose,
   targetScore,
   walletBalance,
+  initialStake,
+  initialDate,
+  onConfirm,
+  isEditMode = false,
 }) => {
-  const [step, setStep] = useState(1);
-  const [selectedStake, setSelectedStake] = useState<number | null>(null);
-  const [selectedCompDate, setSelectedCompDate] = useState<string>('');
+  const [step, setStep] = useState(initialStake ? 2 : 1);
+  const [selectedStake, setSelectedStake] = useState<number | null>(initialStake || null);
+  const [selectedCompDate, setSelectedCompDate] = useState<string>(initialDate || '');
   const [showGameEntryConfirmation, setShowGameEntryConfirmation] = useState(false);
+  const [complete, setComplete] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const slideX = useRef(new Animated.Value(0)).current;
+  const slideX = useRef(new Animated.Value(initialStake ? 1 : 0)).current;
   const contentSlideX = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current as Animated.Value;
   const hasCrossedThresholdRef = useRef(false);
   const backFadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  // Initialize panel position and state when visible changes
+  React.useEffect(() => {
+    if (isVisible) {
+      if (initialStake) {
+        // If we have an initial stake, start at step 2 and set the slide position
+        setStep(2);
+        setSelectedStake(initialStake);
+        slideX.setValue(1);
+      } else {
+        // Reset to initial state if no initial stake
+        setStep(1);
+        setSelectedStake(null);
+        slideX.setValue(0);
+      }
+    }
+  }, [isVisible, initialStake]);
+
+  // Reset state when panel becomes invisible
+  React.useEffect(() => {
+    if (!isVisible) {
+      setStep(initialStake ? 2 : 1);
+      setSelectedStake(initialStake || null);
+      setSelectedCompDate(initialDate || '');
+      setShowGameEntryConfirmation(false);
+      slideX.setValue(initialStake ? 1 : 0);
+      contentSlideX.setValue(0);
+    }
+  }, [isVisible, initialStake, initialDate]);
 
   // Animate back button in when on comp date step
   React.useEffect(() => {
@@ -385,6 +453,34 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
     setShowGameEntryConfirmation(true);
   };
 
+  // Handle confirm in confirmation popup
+  const handleConfirm = () => {
+    setShowGameEntryConfirmation(false);
+    setComplete(true);
+    if (onConfirm) onConfirm();
+  };
+
+  // Handle close of GAME UPDATE message
+  const handleCompleteClose = () => {
+    setComplete(false);
+    onClose();
+  };
+
+  // DEBUG: Log targetScore, initialStake, and selectedStake before rendering StakeEntryStep
+  React.useEffect(() => {
+    if (isVisible) {
+      console.log('[GameEntrySlidingPanel] targetScore:', targetScore, 'initialStake:', initialStake, 'selectedStake:', selectedStake);
+    }
+  }, [isVisible, targetScore, initialStake, selectedStake]);
+
+  // DEBUG: Log current step
+  React.useEffect(() => {
+    console.log('[GameEntrySlidingPanel] Current step:', step);
+  }, [step]);
+
+  // DEBUG: Log isVisible and step at the top of render
+  console.log('[GameEntrySlidingPanel] isVisible:', isVisible, 'step:', step);
+
   if (!isVisible) return null;
 
   return (
@@ -437,17 +533,19 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                 {/* Stake Entry Step */}
                 <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
                   {/* Fixed Header Elements */}
-                  <TouchableOpacity
-                    style={[styles.closeButton, { left: scaleWidth(20), right: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
-                    onPress={handleBack}
-                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-                  >
-                    <Image
-                      source={require('../../../assets/icons/navigation/back.png')}
-                      style={styles.closeIcon}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
+                  {!(step === 2 && !!initialStake) && (
+                    <TouchableOpacity
+                      style={[styles.closeButton, { left: scaleWidth(20), right: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
+                      onPress={handleBack}
+                      hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+                    >
+                      <Image
+                        source={require('../../../assets/icons/navigation/back.png')}
+                        style={styles.closeIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity
                     style={[styles.closeButton, { right: scaleWidth(20), left: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
                     onPress={handlePanelClose}
@@ -484,6 +582,7 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                       {/* Stake Entry Content */}
                       <View style={{ width: SCREEN_WIDTH, height: '100%' }}>
                         <StakeEntryStep
+                          key={selectedStake}
                           targetScore={targetScore}
                           walletBalance={walletBalance}
                           selectedStake={selectedStake}
@@ -492,14 +591,15 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                           onNext={handleNext}
                           game={null}
                           potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+                          isEditMode={!!initialStake}
                         />
                       </View>
-
-                      {/* Comp Date Entry Content */}
+                      {/* Comp Date Content */}
                       <View style={{ width: SCREEN_WIDTH, height: '100%' }}>
                         <CompDateEntryStep
                           onBack={handleBack}
                           onNext={(dateStr: string) => handleCompDateNext(dateStr)}
+                          initialDate={initialDate}
                         />
                       </View>
                     </Animated.View>
@@ -510,13 +610,13 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
 
             {/* Fixed Progress Indicator */}
             <View style={styles.progressContainer}>
-              {[...Array(3)].map((_, index) => (
+              {[...Array(isEditMode ? 2 : 3)].map((_, index) => (
                 <View
                   key={index}
                   style={[
                     styles.progressIndicator,
-                    index + 1 === step ? styles.currentStep : styles.otherStep,
-                    step === 1 && { backgroundColor: '#E3E3E3' },
+                    (isEditMode ? index + 2 === step : index + 1 === step) ? styles.currentStep : styles.otherStep,
+                    step === 1 && !isEditMode && { backgroundColor: '#E3E3E3' },
                   ]}
                 />
               ))}
@@ -531,13 +631,28 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
               compDate={selectedCompDate}
               potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
               onBack={() => setShowGameEntryConfirmation(false)}
-              onConfirm={() => setShowGameEntryConfirmation(false)}
+              onConfirm={handleConfirm}
               onClose={() => {
                 setShowGameEntryConfirmation(false);
                 setTimeout(() => {
                   handlePanelClose();
                 }, 350); // allow popup to animate out before sliding panel down
               }}
+              isEditMode={isEditMode}
+            />
+            {/* GAME UPDATE message after confirming */}
+            <GameEntryConfirmationPopup
+              isVisible={complete}
+              clubName={"Your Golf Club"}
+              requiredScore={targetScore}
+              stake={selectedStake || 0}
+              compDate={selectedCompDate}
+              potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+              onBack={handleCompleteClose}
+              onConfirm={handleCompleteClose}
+              onClose={handleCompleteClose}
+              isEditMode={isEditMode}
+              showOnlyGameUpdate={true}
             />
           </Animated.View>
         </View>

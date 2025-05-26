@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
     fontSize: scaleWidth(14),
     fontStyle: 'normal',
-    fontWeight: '500',
-    lineHeight: scaleHeight(22),
+    fontWeight: '700',
+    lineHeight: scaleHeight(22.442), // 160.3% of 14px
   },
   clubAddress: {
     color: '#18302A',

@@ -61,7 +61,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   // Handle autofill by watching for quick changes in input values
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: any;
     
     const handlePossibleAutofill = () => {
       // Clear any existing timeout
@@ -120,7 +120,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     ]).start(() => {
       // Hold for a moment before navigating
       setTimeout(() => {
-        navigation.replace('MainApp', undefined);
+        navigation.replace('MainApp', { screen: 'GamesScreen' });
       }, 500);
     });
   };
@@ -137,7 +137,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleEmailSupport = () => {
     Keyboard.dismiss();
-    Linking.openURL('mailto:support@stablestakes.com');
+    Linking.openURL('mailto:info@stablestakes.co.uk');
   };
 
   const handleRegister = () => {
@@ -280,9 +280,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     position: 'absolute',
-    left: scaleWidth(32),
-    width: scaleWidth(279),
-    height: scaleHeight(177),
+    left: '50%',
+    width: scaleWidth(209.25),
+    height: scaleHeight(132.75),
+    marginLeft: -scaleWidth(209.25 / 2),
     zIndex: 2,
   },
   logo: {

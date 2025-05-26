@@ -41,7 +41,7 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
       <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
         <Text style={styles.header}>YOUR CHD ID</Text>
         <Text style={styles.verificationText}>
-          Enter your Central Handicap Database ID to verify your handicap status.
+          Enter your 10 digit Central Handicap Database ID to verify your handicap status.
         </Text>
         <TextInput
           style={[
@@ -120,17 +120,14 @@ const styles = StyleSheet.create({
   inputInactive: {
     color: 'rgba(96, 133, 123, 0.50)',
     borderColor: 'rgba(96, 133, 123, 0.50)',
-    letterSpacing: 0,
   },
   inputValid: {
     color: '#18302A',
     borderColor: '#4EDD69',
-    letterSpacing: scaleWidth(-0.28),
   },
   inputInvalid: {
     color: '#18302A',
     borderColor: '#FE606E',
-    letterSpacing: 0,
   },
   nextButton: {
     width: '100%',

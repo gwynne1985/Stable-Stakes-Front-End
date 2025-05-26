@@ -228,6 +228,7 @@ export const ConfirmDepositBottomSheet: React.FC<ConfirmDepositBottomSheetProps>
                       editable={!processing}
                     />
                   </View>
+                  <Text style={styles.paymentLink}>Change</Text>
                 </>
               )}
               <View style={styles.buttonRow}>
@@ -453,5 +454,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: scaleHeight(20),
     width: scaleWidth(300),
+  },
+  paymentLink: {
+    color: '#18302A',
+    textAlign: 'right',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(11),
+    fontStyle: 'normal',
+    fontWeight: '500',
+    lineHeight: scaleHeight(17.633),
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'solid',
+    textDecorationColor: '#18302A',
+    alignSelf: 'flex-end',
+    marginTop: scaleHeight(4),
+    marginRight: scaleWidth(20),
   },
 }); 

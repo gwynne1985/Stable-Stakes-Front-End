@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ImageSourcePropType, TouchableOpacity } from 'react-native';
 import { scaleWidth, scaleHeight } from '../utils/scale';
 import { ScoreSubmissionPanel } from './games/scoresubmission';
+import { GameEntrySlidingPanel } from './panels/GameEntrySlidingPanel';
+import { GameEntryConfirmationPopup } from './panels/GameEntryConfirmationPopup';
+import { toISODate } from '../utils/date';
 
 interface GameEntryCardProps {
   image: ImageSourcePropType;
-  targetScore: number;
+  targetScore: 34 | 37 | 40;
   plusColor: string;
   date: string;
   club: string;
-  stake: string;
-  potentialReturn: string;
+  stake: number | string;
+  potentialReturn: number;
+  onEdit?: () => void;
+  walletBalance?: number;
 }
 
 export const GameEntryCard: React.FC<GameEntryCardProps> = ({
@@ -21,8 +26,60 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
   club,
   stake,
   potentialReturn,
+  onEdit,
+  walletBalance = 0,
 }) => {
-  const [showScorePanel, setShowScorePanel] = React.useState(false);
+  const [showScorePanel, setShowScorePanel] = useState(false);
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [showEditStartPopup, setShowEditStartPopup] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showGameUpdate, setShowGameUpdate] = useState(false);
+
+  // Parse stake value from string (remove £ and convert to number)
+  const parsedStake = React.useMemo(() => {
+    if (typeof stake === 'string') {
+      const numericValue = parseFloat(stake.replace(/[^0-9.-]+/g, ''));
+      return isNaN(numericValue) ? 0 : numericValue;
+    }
+    return stake || 0;
+  }, [stake]);
+
+  // DEBUG: Log stake and parsedStake for troubleshooting
+  React.useEffect(() => {
+    console.log('[GameEntryCard] targetScore:', targetScore, 'stake:', stake, 'parsedStake:', parsedStake);
+  }, [targetScore, stake, parsedStake]);
+
+  const handleEdit = () => {
+    setShowEditStartPopup(true);
+  };
+
+  const handleEditConfirm = () => {
+    setShowEditStartPopup(false);
+    setShowEditPanel(true);
+  };
+
+  const handleEditCancel = () => {
+    setShowEditStartPopup(false);
+  };
+
+  // Called when user confirms in the sliding panel's confirmation popup
+  const handlePanelConfirm = () => {
+    setShowEditPanel(false);
+    setShowGameUpdate(true);
+  };
+
+  // Called when user closes the GAME UPDATE message
+  const handleGameUpdateClose = () => {
+    setShowGameUpdate(false);
+  };
+
+  // Handler for confirming in the confirmation popup
+  const handleConfirm = () => {
+    setShowConfirmation(false);
+    setTimeout(() => {
+      setShowGameUpdate(true);
+    }, 350); // allow popup to close before showing GAME UPDATE
+  };
 
   return (
     <View style={styles.card}> 
@@ -50,9 +107,85 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
         </View>
         <View style={styles.returnRow}>
           <Text style={styles.stakeLabel}>Potential Return: </Text>
-          <Text style={styles.stakeValue}>{potentialReturn}</Text>
+          <Text style={styles.stakeValue}>£{potentialReturn}</Text>
         </View>
+        {/* Edit Button */}
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={handleEdit}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Image 
+            source={require('../../assets/icons/edit.png')} 
+            style={styles.editIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* Edit Start Popup (Edit/Cancel) */}
+      <GameEntryConfirmationPopup
+        isVisible={showEditStartPopup}
+        clubName={club}
+        requiredScore={targetScore}
+        stake={parsedStake}
+        compDate={date}
+        potentialReturn={potentialReturn}
+        onBack={handleEditCancel}
+        onConfirm={handleEditConfirm}
+        onClose={handleEditCancel}
+        isEditMode={true}
+        onCancel={handleEditCancel}
+        disableInternalAnimation={true}
+      />
+      {/* Game Entry Sliding Panel */}
+      {showEditPanel && (
+        <GameEntrySlidingPanel
+          isVisible={true}
+          onClose={() => setShowEditPanel(false)}
+          targetScore={targetScore}
+          walletBalance={walletBalance}
+          initialStake={parsedStake}
+          initialDate={toISODate(date)}
+          onConfirm={() => {
+            setShowEditPanel(false);
+            setTimeout(() => {
+              setShowGameUpdate(true);
+            }, 350);
+          }}
+          isEditMode={true}
+        />
+      )}
+      {/* Confirmation Popup (normal, with Back/Confirm) */}
+      {showConfirmation && (
+        <GameEntryConfirmationPopup
+          isVisible={showConfirmation}
+          clubName={"Your Golf Club"}
+          requiredScore={targetScore}
+          stake={parsedStake}
+          compDate={toISODate(date)}
+          potentialReturn={parsedStake ? parsedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+          onBack={() => setShowConfirmation(false)}
+          onConfirm={handleConfirm}
+          onClose={() => setShowConfirmation(false)}
+        />
+      )}
+      {/* GAME UPDATE message/modal */}
+      {showGameUpdate && (
+        <GameEntryConfirmationPopup
+          isVisible={showGameUpdate}
+          clubName={"Your Golf Club"}
+          requiredScore={targetScore}
+          stake={parsedStake}
+          compDate={toISODate(date)}
+          potentialReturn={parsedStake ? parsedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+          onBack={() => setShowGameUpdate(false)}
+          onConfirm={() => setShowGameUpdate(false)}
+          onClose={() => setShowGameUpdate(false)}
+          isEditMode={true}
+          showOnlyGameUpdate={true}
+        />
+      )}
     </View>
   );
 };
@@ -176,7 +309,23 @@ const styles = StyleSheet.create({
     color: '#18302A',
     fontFamily: 'Poppins',
     fontSize: scaleWidth(10),
-    fontWeight: '800',
+    fontStyle: 'italic',
+    fontWeight: '900',
+    lineHeight: undefined,
     letterSpacing: scaleWidth(-0.28),
+  },
+  editButton: {
+    position: 'absolute',
+    bottom: scaleHeight(22),
+    right: scaleWidth(22),
+    zIndex: 2,
+    width: scaleWidth(24),
+    height: scaleWidth(24),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editIcon: {
+    width: scaleWidth(24),
+    height: scaleWidth(24),
   },
 }); 

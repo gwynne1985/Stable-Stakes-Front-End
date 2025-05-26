@@ -73,9 +73,7 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
         </View>
       </View>
       {status === 'Enter Score' ? (
-        <TouchableOpacity onPress={() => setShowScorePanel(true)}>
-          <Text>test</Text>
-        </TouchableOpacity>
+        null
       ) : (
         <View>
           <Text>{status}</Text>
@@ -88,6 +86,10 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
           onBack={() => setShowScorePanel(false)}
           onSubmit={() => setShowScorePanel(false)}
           onClose={() => setShowScorePanel(false)}
+          clubName={"Placeholder Club"}
+          requiredScore={score}
+          stake={10}
+          potentialReturn={100}
         />
       )}
     </TouchableOpacity>
@@ -96,14 +98,15 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
 
 const styles = StyleSheet.create({
   outerContainer: {
-    width: scaleWidth(320),
+    width: scaleWidth(300),
     height: scaleHeight(130),
     borderRadius: scaleWidth(20),
-    marginBottom: scaleHeight(16),
+    marginBottom: scaleHeight(22),
     borderWidth: 2,
+    alignSelf: 'center',
   },
   innerContainer: {
-    width: scaleWidth(284),
+    width: scaleWidth(264),
     height: scaleHeight(126),
     backgroundColor: '#18302A',
     borderRadius: scaleWidth(20),
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
   popularBadge: {
     position: 'absolute',
     top: -scaleHeight(12),
-    right: scaleWidth(24),
+    right: scaleWidth(131),
     backgroundColor: '#FF4D4D',
     paddingHorizontal: scaleWidth(12),
     paddingVertical: scaleHeight(4),
@@ -207,5 +210,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: scaleWidth(12),
     color: '#FFFFFF',
+  },
+  card: {
+    width: scaleWidth(300),
+    height: scaleHeight(225),
+    borderRadius: scaleWidth(20),
+    backgroundColor: '#FFF',
+    marginBottom: scaleHeight(24),
+    overflow: 'hidden',
+    alignSelf: 'center',
   },
 }); 

@@ -147,9 +147,9 @@ const styles = StyleSheet.create({
   },
   ball: {
     position: 'absolute',
-    width: scaleWidth(24),
-    height: scaleWidth(24),
-    bottom: scaleHeight(60),
+    width: scaleWidth(18),
+    height: scaleWidth(18),
+    bottom: scaleHeight(45),
   },
   topLine: {
     position: 'absolute',
