@@ -5,10 +5,12 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
 import { InfoBottomSheet } from '../panels/InfoBottomSheet';
+import { isChdIdAvailable } from '../../services/registration';
 
 interface ChdIdStepProps {
   chdId: string;
@@ -23,17 +25,39 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
   onNext,
   onFinish,
 }) => {
+  const [blurred, setBlurred] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const isValidChdId = useMemo(() => {
     return /^\d{10}$/.test(chdId.trim());
   }, [chdId]);
 
-  const [blurred, setBlurred] = useState(false);
-  const [infoVisible, setInfoVisible] = useState(false);
+  const handleFinish = async () => {
+    if (!isValidChdId) return;
 
-  const handleFinish = () => {
-    if (isValidChdId) {
+    try {
+      setIsChecking(true);
+      setError(null);
+      
+      const available = await isChdIdAvailable(chdId);
+      if (!available) {
+        setError('This CHD ID is already registered. Please check and try another.');
+        return;
+      }
+
       onFinish();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to verify CHD ID. Please try again.');
+    } finally {
+      setIsChecking(false);
     }
+  };
+
+  const handleChange = (text: string) => {
+    setError(null);
+    onChdIdChange(text);
   };
 
   return (
@@ -43,30 +67,43 @@ export const ChdIdStep: React.FC<ChdIdStepProps> = ({
         <Text style={styles.verificationText}>
           Enter your 10 digit Central Handicap Database ID to verify your handicap status.
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            chdId.length === 0
-              ? styles.inputInactive
-              : isValidChdId
-              ? styles.inputValid
-              : blurred && chdId.length > 0
-              ? styles.inputInvalid
-              : null,
-          ]}
-          value={chdId}
-          onChangeText={onChdIdChange}
-          placeholder="CHD ID"
-          placeholderTextColor="rgba(96, 133, 123, 0.50)"
-          autoCapitalize="characters"
-          keyboardType="number-pad"
-          maxLength={10}
-          onBlur={() => setBlurred(true)}
-        />
+        <View style={{ position: 'relative' }}>
+          <TextInput
+            style={[
+              styles.input,
+              chdId.length === 0
+                ? styles.inputInactive
+                : isValidChdId
+                ? styles.inputValid
+                : blurred && chdId.length > 0
+                ? styles.inputInvalid
+                : null,
+            ]}
+            value={chdId}
+            onChangeText={handleChange}
+            placeholder="CHD ID"
+            placeholderTextColor="rgba(96, 133, 123, 0.50)"
+            autoCapitalize="characters"
+            keyboardType="number-pad"
+            maxLength={10}
+            onBlur={() => setBlurred(true)}
+            editable={!isChecking}
+          />
+          {isChecking && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="small" color="#18302A" />
+            </View>
+          )}
+        </View>
+        
+        {error && (
+          <Text style={styles.errorText}>{error}</Text>
+        )}
+        
         <PrimaryButton
           title="Finish"
           onPress={handleFinish}
-          isActive={isValidChdId}
+          isActive={isValidChdId && !isChecking}
           style={styles.nextButton}
         />
         <TouchableOpacity onPress={() => setInfoVisible(true)} activeOpacity={0.7} style={styles.helpContainer}>
@@ -109,10 +146,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
     fontStyle: 'normal',
     fontWeight: '500',
-    lineHeight: undefined, // normal
+    lineHeight: undefined,
     borderRadius: scaleWidth(5),
-    fontSize: scaleWidth(14), // default to active size
-    marginBottom: scaleHeight(24),
+    fontSize: scaleWidth(14),
+    marginBottom: scaleHeight(8),
     backgroundColor: '#FFF',
     borderWidth: 1,
     borderColor: '#CCC',
@@ -129,9 +166,22 @@ const styles = StyleSheet.create({
     color: '#18302A',
     borderColor: '#FE606E',
   },
+  loadingOverlay: {
+    position: 'absolute',
+    right: scaleWidth(16),
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  errorText: {
+    color: '#FE606E',
+    fontFamily: 'Poppins',
+    fontSize: scaleWidth(12),
+    marginBottom: scaleHeight(16),
+  },
   nextButton: {
     width: '100%',
-    marginTop: scaleHeight(40),
+    marginTop: scaleHeight(24),
   },
   helpContainer: {
     alignItems: 'center',

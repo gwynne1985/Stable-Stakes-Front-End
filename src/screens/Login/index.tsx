@@ -20,6 +20,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation';
 import { InputField, PrimaryButton } from '../../components';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -59,58 +61,36 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
-  // Handle autofill by watching for quick changes in input values
-  useEffect(() => {
-    let timeoutId: any;
-    
-    const handlePossibleAutofill = () => {
-      // Clear any existing timeout
-      if (timeoutId) clearTimeout(timeoutId);
-      
-      // Set a new timeout to check if both fields are filled
-      timeoutId = setTimeout(() => {
-        if (email && password) {
-          Keyboard.dismiss();
-        }
-      }, 100);
-    };
-
-    handlePossibleAutofill();
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [email, password]);
-
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!email || !password) {
       setShowError(true);
       return;
     }
 
     setIsSigningIn(true);
+    setShowError(false);
     Keyboard.dismiss();
 
-    // Start showing tagline while content fades out
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // Animation: Fade out content and transition
     Animated.parallel([
-      // Fade out content
       Animated.timing(contentOpacity, {
         toValue: 0,
         duration: 500,
         useNativeDriver: true,
       }),
-      // Start showing tagline earlier
       Animated.sequence([
-        Animated.delay(200), // Small delay before tagline starts
+          Animated.delay(200),
         Animated.timing(taglineOpacity, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
       ]),
-      // Move logo last and slower
       Animated.sequence([
-        Animated.delay(300), // Delay before logo moves
+          Animated.delay(300),
         Animated.timing(logoPosition, {
           toValue: scaleHeight(274),
           duration: 1200,
@@ -118,11 +98,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         }),
       ]),
     ]).start(() => {
-      // Hold for a moment before navigating
       setTimeout(() => {
         navigation.replace('MainApp', { screen: 'GamesScreen' });
       }, 500);
     });
+    } catch (error) {
+      console.error('Login failed:', error);
+      setShowError(true);
+      setIsSigningIn(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -216,7 +200,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              {showError && <Text style={styles.errorText}>Incorrect Password</Text>}
+              {showError && <Text style={styles.errorText}>Invalid email or password</Text>}
               
               <Pressable onPress={handleForgotPassword}>
                 <Text style={styles.forgotPassword}>Forgot your password?</Text>

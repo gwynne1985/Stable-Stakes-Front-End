@@ -8,9 +8,12 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
+import { sendVerificationCode } from '../../services/verification';
+import { useRegistrationStore } from '../../state/useRegistrationStore';
 
 interface VerificationStepProps {
   code: string;
@@ -23,6 +26,7 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
   onCodeChange,
   onNext,
 }) => {
+  const registrationStore = useRegistrationStore();
   const isValidCode = useMemo(() => {
     return code.length === 5 && /^\d+$/.test(code);
   }, [code]);
@@ -34,6 +38,7 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
     React.createRef(),
     React.createRef(),
   ]);
+
   const handleCodeChange = (text: string, idx: number) => {
     let newCode = code.split('');
     if (text.length > 0) {
@@ -44,6 +49,15 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
       if (idx > 0) inputRefs.current[idx - 1]?.current?.focus();
     }
     onCodeChange(newCode.join(''));
+  };
+
+  const handleResendCode = async () => {
+    try {
+      await sendVerificationCode(registrationStore.email);
+      Alert.alert('Success', 'Verification code resent successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to resend verification code. Please try again.');
+    }
   };
 
   return (
@@ -95,7 +109,7 @@ export const VerificationStep: React.FC<VerificationStepProps> = ({
             style={styles.nextButton}
           />
           <View style={{ height: 20 }} />
-          <TouchableOpacity style={styles.resendButton}>
+          <TouchableOpacity onPress={handleResendCode} style={styles.resendButton}>
             <Text style={styles.resendButtonText}>Resend Code</Text>
           </TouchableOpacity>
         </View>

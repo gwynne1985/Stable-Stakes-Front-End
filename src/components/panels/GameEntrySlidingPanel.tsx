@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,18 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Modal,
+  Alert,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { StakeEntryStep } from '../games/GameEntryPanel/StakeEntryStep';
 import { CompDateCalendarSheet } from './CompDateCalendarSheet';
-import { GameSummaryStep } from '../games/GameEntryPanel/GameSummaryStep';
+import { GameSummaryStep, GameType } from '../games/GameEntryPanel/GameSummaryStep';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { GameEntryConfirmationPopup } from './GameEntryConfirmationPopup';
+import { doc, getDoc, setDoc, serverTimestamp, addDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
+import { USERS, CLUBS, GAMES } from '../../constants/firestore';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const PANEL_HEIGHT = scaleHeight(737);
@@ -30,12 +34,13 @@ const totalSteps = 3;
 interface GameEntrySlidingPanelProps {
   isVisible: boolean;
   onClose: () => void;
-  targetScore: 34 | 37 | 40;
+  targetScore: number;
   walletBalance: number;
   initialStake?: number;
   initialDate?: string;
   onConfirm?: () => void;
   isEditMode?: boolean;
+  gameType: GameType;
 }
 
 const CompDateEntryStep: React.FC<{ onBack: () => void; onNext: (dateStr: string) => void; initialDate?: string }> = ({ onBack, onNext, initialDate }) => {
@@ -271,6 +276,7 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
   initialDate,
   onConfirm,
   isEditMode = false,
+  gameType,
 }) => {
   const [step, setStep] = useState(initialStake ? 2 : 1);
   const [selectedStake, setSelectedStake] = useState<number | null>(initialStake || null);
@@ -283,6 +289,9 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
   const panY = useRef(new Animated.Value(0)).current as Animated.Value;
   const hasCrossedThresholdRef = useRef(false);
   const backFadeAnim = React.useRef(new Animated.Value(0)).current;
+  const [userClubId, setUserClubId] = useState<string | null>(null);
+  const [clubDisplayName, setClubDisplayName] = useState('Your Club');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Initialize panel position and state when visible changes
   React.useEffect(() => {
@@ -449,15 +458,66 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
 
   // New: handle Next on Comp Date page
   const handleCompDateNext = (compDateStr: string) => {
+    console.log("[GameEntrySlidingPanel] handleCompDateNext called with:", compDateStr); // LOG A
     setSelectedCompDate(compDateStr);
     setShowGameEntryConfirmation(true);
   };
 
   // Handle confirm in confirmation popup
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowGameEntryConfirmation(false);
-    setComplete(true);
-    if (onConfirm) onConfirm();
+    // if (onConfirm) onConfirm(); // Call this after DB ops too.
+
+    const user = auth.currentUser;
+    if (user && selectedStake && selectedCompDate && userClubId) {
+      console.log("[GAME BOOKING] Starting Firestore operations..."); // LOG 1
+      setIsLoading(true);
+      try {
+        const gameData = {
+          user_id: user.uid,
+          club_id: userClubId,
+          game_type: gameType,
+          target_score: targetScore,
+          stake_amount: selectedStake,
+          competition_date: selectedCompDate, 
+          potential_return: selectedStake * (targetScore === 34 ? 2 : targetScore === 37 || targetScore === 38 ? 5 : 7),
+          status: "upcoming",
+          result: "pending",
+          created_at: serverTimestamp(),
+        };
+        console.log("[GAME BOOKING] Game data prepared:", gameData); // LOG 2
+        
+        await addDoc(collection(db, GAMES), gameData);
+        console.log("[GAME BOOKING] Game document CREATED successfully."); // LOG 3
+
+        const userDocRef = doc(db, USERS, user.uid);
+        const userDoc = await getDoc(userDocRef);
+        console.log("[GAME BOOKING] User document fetched for wallet update."); // LOG 4
+
+        if (userDoc.exists()) {
+          const currentBalance = userDoc.data().wallet_balance || 0;
+          console.log("[GAME BOOKING] Current wallet balance:", currentBalance); // LOG 5
+          await updateDoc(userDocRef, { wallet_balance: currentBalance - selectedStake });
+          console.log("[GAME BOOKING] Wallet balance UPDATED successfully."); // LOG 6
+        } else {
+          console.error("[GAME BOOKING] User document not found for wallet update."); // LOG 7
+        }
+        
+        console.log("Game created and wallet updated successfully");
+        setComplete(true); 
+        if (onConfirm) onConfirm(); 
+
+      } catch (error) {
+        console.error("[GAME BOOKING] Error during Firestore operations:", error); // LOG 8
+        Alert.alert("Error", "Failed to book game. Please try again.");
+        setComplete(false); 
+      } finally {
+        setIsLoading(false); 
+      }
+    } else {
+      console.warn("[GAME BOOKING] Missing data for Firestore write:", { user, selectedStake, selectedCompDate, userClubId }); // LOG 9
+      Alert.alert("Error", "Could not book game. Please try again.");
+    }
   };
 
   // Handle close of GAME UPDATE message
@@ -480,6 +540,60 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
 
   // DEBUG: Log isVisible and step at the top of render
   console.log('[GameEntrySlidingPanel] isVisible:', isVisible, 'step:', step);
+
+  useEffect(() => {
+    const fetchUserDataAndClubName = async () => {
+      if (!isVisible) {
+        // Reset when panel is not visible to ensure fresh data on next open
+        setUserClubId(null);
+        setClubDisplayName('Your Club');
+        return;
+      }
+
+      // Only fetch if clubId not already fetched for this visibility cycle
+      if (userClubId) return;
+
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          console.log("[GameEntrySlidingPanel] Fetching user and club data...");
+          const userDocRef = doc(db, USERS, user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const fetchedUserClubId = userDoc.data().clubId;
+            setUserClubId(fetchedUserClubId || null);
+
+            if (fetchedUserClubId) {
+              console.log("[GameEntrySlidingPanel] User clubId:", fetchedUserClubId);
+              const clubsQuery = query(collection(db, CLUBS), where('club_id', '==', fetchedUserClubId));
+              const clubsSnapshot = await getDocs(clubsQuery);
+              const clubDoc = clubsSnapshot.docs[0];
+
+              if (clubDoc && clubDoc.exists()) {
+                const clubData = clubDoc.data();
+                const displayName = clubData.club_name_short || clubData.club_name || 'Your Club';
+                setClubDisplayName(displayName);
+                console.log("[GameEntrySlidingPanel] Club display name set to:", displayName);
+              } else {
+                console.log("[GameEntrySlidingPanel] Club document not found for club_id:", fetchedUserClubId);
+                setClubDisplayName('Your Club'); // Fallback
+              }
+            } else {
+              console.log("[GameEntrySlidingPanel] User has no clubId.");
+              setClubDisplayName('Your Club'); // Fallback
+            }
+          } else {
+            console.log("[GameEntrySlidingPanel] User document not found.");
+            setClubDisplayName('Your Club'); // Fallback
+          }
+        } catch (error) {
+          console.error("[GameEntrySlidingPanel] Error fetching user/club data:", error);
+          setClubDisplayName('Your Club'); // Fallback
+        }
+      }
+    };
+    fetchUserDataAndClubName();
+  }, [isVisible, userClubId]); // Rerun if isVisible changes, or if userClubId was initially null and gets set
 
   if (!isVisible) return null;
 
@@ -524,6 +638,7 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                 <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
                   <GameSummaryStep
                     targetScore={targetScore}
+                    gameType={gameType}
                     onNext={handleNext}
                     onClose={onClose}
                     handlePanelClose={handlePanelClose}
@@ -534,17 +649,17 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                 <View style={{ width: SCREEN_WIDTH, flex: 1 }}>
                   {/* Fixed Header Elements */}
                   {!(step === 2 && !!initialStake) && (
-                    <TouchableOpacity
-                      style={[styles.closeButton, { left: scaleWidth(20), right: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
-                      onPress={handleBack}
-                      hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-                    >
-                      <Image
-                        source={require('../../../assets/icons/navigation/back.png')}
-                        style={styles.closeIcon}
-                        resizeMode="contain"
-                      />
-                    </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.closeButton, { left: scaleWidth(20), right: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
+                    onPress={handleBack}
+                    hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+                  >
+                    <Image
+                      source={require('../../../assets/icons/navigation/back.png')}
+                      style={styles.closeIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
                   )}
                   <TouchableOpacity
                     style={[styles.closeButton, { right: scaleWidth(20), left: undefined, position: 'absolute', top: scaleHeight(24), zIndex: 11 }]}
@@ -583,7 +698,7 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
                       <View style={{ width: SCREEN_WIDTH, height: '100%' }}>
                         <StakeEntryStep
                           key={selectedStake}
-                          targetScore={targetScore}
+                          targetScore={targetScore as 34 | 37 | 40}
                           walletBalance={walletBalance}
                           selectedStake={selectedStake}
                           setSelectedStake={setSelectedStake}
@@ -622,32 +737,29 @@ export const GameEntrySlidingPanel: React.FC<GameEntrySlidingPanelProps> = ({
               ))}
             </View>
 
-            {/* Game Entry Confirmation Popup */}
+            {/* Game Entry Confirmation Popup (Normal Flow) */}
             <GameEntryConfirmationPopup
               isVisible={showGameEntryConfirmation}
-              clubName={"Your Golf Club"}
-              requiredScore={targetScore}
+              clubName={clubDisplayName}
+              requiredScore={targetScore as 34 | 37 | 40}
               stake={selectedStake || 0}
               compDate={selectedCompDate}
-              potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+              potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 || targetScore === 38 ? 5 : 7) : 0}
               onBack={() => setShowGameEntryConfirmation(false)}
               onConfirm={handleConfirm}
               onClose={() => {
                 setShowGameEntryConfirmation(false);
-                setTimeout(() => {
-                  handlePanelClose();
-                }, 350); // allow popup to animate out before sliding panel down
               }}
               isEditMode={isEditMode}
             />
-            {/* GAME UPDATE message after confirming */}
+            {/* GAME UPDATE message after successful Firestore writes */}
             <GameEntryConfirmationPopup
               isVisible={complete}
-              clubName={"Your Golf Club"}
-              requiredScore={targetScore}
+              clubName={clubDisplayName}
+              requiredScore={targetScore as 34 | 37 | 40}
               stake={selectedStake || 0}
               compDate={selectedCompDate}
-              potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 ? 5 : 7) : 0}
+              potentialReturn={selectedStake ? selectedStake * (targetScore === 34 ? 2 : targetScore === 37 || targetScore === 38 ? 5 : 7) : 0}
               onBack={handleCompleteClose}
               onConfirm={handleCompleteClose}
               onClose={handleCompleteClose}

@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
+import { useRegistrationStore } from '../../state/useRegistrationStore';
 
 interface DobStepProps {
   onNext: () => void;
@@ -86,6 +87,17 @@ export const DobStep: React.FC<DobStepProps> = ({
   // Button is active as soon as the date is valid and over 18
   const isValid = isFilled && isNumeric && isValidDate(day, month, year) && isOver18(day, month, year);
 
+  const registrationStore = useRegistrationStore();
+
+  // Handler for Next button
+  const handleNext = () => {
+    if (isValid) {
+      // Set dob in registration store
+      registrationStore.setDob(new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10)));
+      onNext();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={{ width: scaleWidth(300), alignSelf: 'center' }}>
@@ -160,7 +172,7 @@ export const DobStep: React.FC<DobStepProps> = ({
         </View>
         <PrimaryButton
           title="Next"
-          onPress={onNext}
+          onPress={handleNext}
           isActive={isValid}
           style={styles.nextButton}
         />

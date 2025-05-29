@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../../utils/scale';
 import { PrimaryButton } from '../../PrimaryButton';
 import { InfoBottomSheet } from '../../panels/InfoBottomSheet';
-import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../../navigation';
+import { auth, db } from '../../../firebase'; // Import db
+import { doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
+import { USERS } from '../../../constants/firestore';
 
 interface StakeEntryStepProps {
   targetScore: 34 | 37 | 40;
@@ -28,7 +30,6 @@ type NavigationProp = BottomTabNavigationProp<TabParamList>;
 
 export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
   targetScore,
-  walletBalance,
   selectedStake,
   setSelectedStake,
   onBack,
@@ -41,6 +42,27 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
   const multiplier = multipliers[targetScore];
   const [infoVisible, setInfoVisible] = useState(false);
   const navigation = useNavigation<NavigationProp>();
+  const [currentWalletBalance, setCurrentWalletBalance] = useState(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userDocRef = doc(db, USERS, user.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setCurrentWalletBalance(userDoc.data().wallet_balance || 0);
+          }
+        } catch (error) {
+          console.error("Error fetching wallet balance:", error);
+        }
+      }
+      setIsLoadingBalance(false);
+    };
+    fetchWalletBalance();
+  }, []);
 
   // Calculate potential return based on selected stake
   const calculatedPotentialReturn = selectedStake ? selectedStake * multiplier : 0;
@@ -61,8 +83,8 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
           // DEBUG: Log types for comparison
           console.log('[StakeEntryStep] amount:', amount, typeof amount, 'selectedStake:', selectedStake, typeof selectedStake);
           return (
-            <TouchableOpacity
-              key={amount}
+          <TouchableOpacity
+            key={amount}
               style={[
                 styles.stakeOption,
                 selectedStake === amount && {
@@ -70,14 +92,14 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
                   borderColor: highlightColor,
                 }
               ]}
-              onPress={() => setSelectedStake(amount)}
-              activeOpacity={0.85}
-            >
+            onPress={() => setSelectedStake(amount)}
+            activeOpacity={0.85}
+          >
               <Text style={[
                 styles.stakeOptionText,
                 { color: '#18302A' }
               ]}>{`£${amount}`}</Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
           );
         })}
       </View>
@@ -101,7 +123,11 @@ export const StakeEntryStep: React.FC<StakeEntryStepProps> = ({
       <View style={styles.walletInfoBox}>
         <View style={styles.walletLeft}>
           <Text style={styles.infoLabel}>Wallet Balance</Text>
-          <Text style={styles.infoValue}>£{walletBalance.toFixed(2)}</Text>
+          {isLoadingBalance ? (
+            <Text style={styles.infoValue}>Loading...</Text>
+          ) : (
+            <Text style={styles.infoValue}>£{currentWalletBalance.toFixed(2)}</Text>
+          )}
         </View>
         <TouchableOpacity 
           style={styles.topUpLink}

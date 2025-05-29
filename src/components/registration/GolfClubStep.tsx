@@ -1,62 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
+  ActivityIndicator,
   Keyboard,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { InputField } from '../InputField';
 import { PrimaryButton } from '../PrimaryButton';
 import { InfoBottomSheet } from '../panels/InfoBottomSheet';
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { useRegistrationStore } from '../../state/useRegistrationStore';
+import { CLUBS } from '../../constants/firestore';
 
-const CLUBS = [
-  {
-    name: 'Saunton Golf Club',
-    address: ['Braunton', 'Devon', 'England', 'EX33 1LG'],
-    county: 'Devon',
-  },
-  {
-    name: 'Portmore Golf Club',
-    address: ['Landkey Rd', 'Barnstaple', 'Devon', 'England', 'EX32 9LB'],
-    county: 'Devon',
-  },
-  {
-    name: 'Ilfracombe Golf Club',
-    address: ['Hele Bay', 'Ilfracombe', 'Devon', 'England', 'EX34 9RT'],
-    county: 'Devon',
-  },
-];
+interface Club {
+  id: string;
+  club_name: string;
+  club_name_short: string;
+  address_line_1: string;
+  address_line_2?: string;
+  city: string;
+  county: string;
+  country: string;
+  postcode: string;
+  course_rating: number;
+  course_slope: number;
+  pro_shop_available: boolean;
+  retail_partner: string;
+  flushin_it_target: number;
+  up_and_down_target: number;
+  throwing_darts_target: number;
+}
 
 export const GolfClubStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
-  const [query, setQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedClub, setSelectedClub] = useState<any>(null);
+  const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [infoVisible, setInfoVisible] = useState(false);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const registrationStore = useRegistrationStore();
 
-  const filteredClubs = CLUBS.filter(club =>
-    club.name.toLowerCase().includes(query.toLowerCase())
-  );
-  const showDropdown = dropdownOpen && query.length > 0 && !selectedClub && (filteredClubs.length === 0 || filteredClubs.length === 1);
+  useEffect(() => {
+    const fetchClubs = async () => {
+      try {
+        console.log('[CLUB FETCH] Starting club fetch...');
+        setIsLoading(true);
+        setError(null);
 
-  const handleSelect = (club: any) => {
+        // Verify Firestore instance
+        const firestore = getFirestore();
+        console.log('[CLUB FETCH] Firestore initialized:', !!firestore);
+        
+        // Try both "clubs" and "Clubs" collections
+        const collectionsToTry = [CLUBS, 'Clubs'];
+        let clubList: Club[] = [];
+        
+        for (const collectionName of collectionsToTry) {
+          console.log(`[CLUB FETCH] Trying collection: ${collectionName}`);
+          const clubsRef = collection(db, collectionName);
+          try {
+            const querySnapshot = await getDocs(clubsRef);
+            console.log(`[CLUB FETCH] Collection ${collectionName} snapshot size:`, querySnapshot.size);
+            
+            if (querySnapshot.size > 0) {
+              clubList = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log('[CLUB DOC]', {
+                  collection: collectionName,
+                  id: doc.id,
+                  club_name: data.club_name,
+                  exists: doc.exists(),
+                });
+                return {
+                  id: doc.id,
+                  ...data
+                } as Club;
+              });
+              console.log('[CLUB FETCH] Successfully loaded from collection:', collectionName);
+              break;
+            }
+          } catch (collectionError) {
+            console.error(`[CLUB FETCH] Error with collection ${collectionName}:`, collectionError);
+          }
+        }
+
+        if (clubList.length === 0) {
+          console.error('[CLUB FETCH] No clubs found in any collection');
+          setError('No clubs found. Please try again later.');
+        } else {
+          console.log('[CLUB FETCH] Total clubs loaded:', clubList.length);
+          setClubs(clubList);
+        }
+      } catch (error) {
+        console.error('[CLUB FETCH] Error:', error);
+        setError('Failed to load clubs. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchClubs();
+  }, []);
+
+  // Add logging to the filtering process
+  const filteredClubs = clubs.filter(club => {
+    const matches = club.club_name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (searchQuery.length > 0) {
+      console.log('[CLUB FILTER]', {
+        query: searchQuery,
+        club_name: club.club_name,
+        matches
+      });
+    }
+    return matches;
+  });
+
+  const showDropdown = dropdownOpen && searchQuery.length > 0 && !selectedClub;
+
+  const handleSelect = (club: Club) => {
     setSelectedClub(club);
-    setQuery(club.name);
+    setSearchQuery(club.club_name);
     setDropdownOpen(false);
     Keyboard.dismiss();
+    registrationStore.setClubId((club as any).club_id || club.id);
   };
 
-  // Open dropdown on focus or when typing
+  const getFullAddress = (club: Club): string[] => {
+    const addressLines = [
+      club.address_line_1,
+      club.address_line_2,
+      club.city,
+      club.county,
+      club.country,
+      club.postcode
+    ].filter((line): line is string => Boolean(line));
+    return addressLines;
+  };
+
   const handleFocus = () => {
     setInputFocused(true);
     setDropdownOpen(true);
   };
+
   const handleBlur = () => {
     setInputFocused(false);
-    // Delay closing dropdown to allow click event to register
     setTimeout(() => setDropdownOpen(false), 150);
   };
 
@@ -70,9 +162,9 @@ export const GolfClubStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
         <View style={{ position: 'relative' }}>
           <InputField
             placeholder="Start typing"
-            value={query}
+            value={searchQuery}
             onChangeText={text => {
-              setQuery(text);
+              setSearchQuery(text);
               setSelectedClub(null);
               if (text.length > 0) {
                 setDropdownOpen(true);
@@ -84,25 +176,38 @@ export const GolfClubStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
             onBlur={handleBlur}
             style={styles.input}
           />
-          {showDropdown && (
+          {isLoading ? (
+            <View style={styles.dropdown}>
+              <View style={styles.dropdownRow}>
+                <ActivityIndicator size="small" color="#18302A" />
+                <Text style={[styles.dropdownNoClub, { marginLeft: 10 }]}>Loading clubs...</Text>
+              </View>
+            </View>
+          ) : error ? (
+            <View style={styles.dropdown}>
+              <View style={styles.dropdownRow}>
+                <Text style={styles.dropdownNoClub}>{error}</Text>
+              </View>
+            </View>
+          ) : showDropdown && (
             <View style={styles.dropdown} pointerEvents="box-none">
               {filteredClubs.length === 0 ? (
                 <TouchableOpacity
                   style={styles.dropdownRow}
                   activeOpacity={1}
-                  onPress={() => {}} // Do nothing, just keep open
+                  onPress={() => {}}
                 >
                   <Text style={styles.dropdownNoClub}>No Club Found</Text>
                 </TouchableOpacity>
               ) : (
-                filteredClubs.map((club, idx) => (
+                filteredClubs.map((club) => (
                   <TouchableOpacity
-                    key={club.name}
+                    key={club.id}
                     style={styles.dropdownRow}
                     onPress={() => handleSelect(club)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.dropdownClubName}>{club.name}</Text>
+                    <Text style={styles.dropdownClubName}>{club.club_name}</Text>
                     <View style={styles.verticalBar} />
                     <Text style={styles.dropdownCounty}>{club.county}</Text>
                   </TouchableOpacity>
@@ -111,16 +216,15 @@ export const GolfClubStep: React.FC<{ onNext: () => void }> = ({ onNext }) => {
             </View>
           )}
         </View>
-        <View style={styles.clubAddressReserve}>
+        
           {selectedClub && (
             <View style={styles.clubAddressBox}>
-              <Text style={styles.clubName}>{selectedClub.name}</Text>
-              {selectedClub.address.map((line: string, idx: number) => (
+            <Text style={styles.clubName}>{selectedClub.club_name}</Text>
+            {getFullAddress(selectedClub).map((line: string, idx: number) => (
                 <Text style={styles.clubAddress} key={idx}>{line}</Text>
               ))}
             </View>
           )}
-        </View>
         <PrimaryButton
           title="Next"
           onPress={onNext}

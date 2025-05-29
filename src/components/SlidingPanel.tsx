@@ -22,6 +22,7 @@ import { DobStep } from './registration/DobStep';
 import { GolfClubStep } from './registration/GolfClubStep';
 import { ChdIdStep } from './registration/ChdIdStep';
 import { OnboardingPanel } from './panels/OnboardingPanel';
+import { useRegistrationStore } from '../state/useRegistrationStore';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 const PANEL_HEIGHT = scaleHeight(737);
@@ -33,6 +34,8 @@ interface Props {
   isVisible: boolean;
   title: string;
   onClose: () => void;
+  onComplete?: () => Promise<void>;
+  isLoading?: boolean;
   children?: React.ReactNode;
   currentStep?: number;
   totalSteps?: number;
@@ -42,19 +45,16 @@ export const SlidingPanel: React.FC<Props> = ({
   isVisible,
   title,
   onClose,
+  onComplete,
+  isLoading = false,
 }) => {
   const [step, setStep] = useState(1);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [dob, setDob] = useState<Date | null>(null);
-  const [golfClub, setGolfClub] = useState('');
-  const [chdId, setChdId] = useState('');
   const hasCrossedThresholdRef = useRef(false);
+  
+  // Use registration store for all form data
+  const registrationStore = useRegistrationStore();
   
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
   const slideX = useRef(new Animated.Value(0)).current;
@@ -153,8 +153,16 @@ export const SlidingPanel: React.FC<Props> = ({
     });
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    if (onComplete) {
+      try {
+        await onComplete();
+      } catch (error) {
+        console.error('Error completing registration:', error);
+      }
+    } else {
     setShowOnboarding(true);
+    }
   };
 
   if (showOnboarding) {
@@ -182,8 +190,8 @@ export const SlidingPanel: React.FC<Props> = ({
       <Animated.View style={[styles.contentContainer, { transform: [{ translateX: slideX }] }]}>
         {step === 1 && (
           <EmailStep
-            email={email}
-            onEmailChange={setEmail}
+            email={registrationStore.email}
+            onEmailChange={registrationStore.setEmail}
             onNext={handleNext}
           />
         )}
@@ -196,15 +204,18 @@ export const SlidingPanel: React.FC<Props> = ({
         )}
         {step === 3 && (
           <PasswordStep
-            onNext={handleNext}
+            onNext={(password) => {
+              registrationStore.setPassword(password);
+              handleNext();
+            }}
           />
         )}
         {step === 4 && (
           <NameStep
-            firstName={firstName}
-            lastName={lastName}
-            onFirstNameChange={setFirstName}
-            onLastNameChange={setLastName}
+            firstName={registrationStore.firstName}
+            lastName={registrationStore.lastName}
+            onFirstNameChange={registrationStore.setFirstName}
+            onLastNameChange={registrationStore.setLastName}
             onNext={handleNext}
           />
         )}
@@ -220,8 +231,8 @@ export const SlidingPanel: React.FC<Props> = ({
         )}
         {step === 7 && (
           <ChdIdStep
-            chdId={chdId}
-            onChdIdChange={setChdId}
+            chdId={registrationStore.chdId}
+            onChdIdChange={registrationStore.setChdId}
             onNext={handleNext}
             onFinish={handleFinish}
           />

@@ -10,6 +10,7 @@ import {
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PasswordFields } from '../PasswordFields';
 import { PrimaryButton } from '../PrimaryButton';
+import { useRegistrationStore } from '../../state/useRegistrationStore';
 
 interface PasswordStepProps {
   onNext: (password: string) => void;
@@ -19,6 +20,8 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
   const [isValid, setIsValid] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const registrationStore = useRegistrationStore();
 
   // Password validation logic (should match PasswordFields logic)
   const isValidPassword = (pw: string) => {
@@ -42,6 +45,12 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
   const handleConfirmPasswordChange = (newConfirm: string) => {
     setConfirmPassword(newConfirm);
     updateIsValid(password, newConfirm);
+  };
+
+  const handleNext = () => {
+    registrationStore.setPassword(password);
+    console.log('[PASSWORD STEP DEBUG] Password set in store:', password);
+    onNext(password);
   };
 
   return (
@@ -72,7 +81,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({ onNext }) => {
           </View>
           <PrimaryButton
             title="Next"
-            onPress={() => onNext(password)}
+            onPress={handleNext}
             isActive={isValid}
             style={styles.nextButton}
           />

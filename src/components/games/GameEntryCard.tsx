@@ -33,6 +33,26 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
 }) => {
   const [showScorePanel, setShowScorePanel] = React.useState(false);
 
+  // Calculate potential return based on score
+  const calculatePotentialReturn = (score: number) => {
+    // Default multipliers based on game type
+    const multipliers = {
+      upAndDown: 2,    // 34+ score
+      flushingIt: 5,   // 37+ score
+      throwingDarts: 7 // 40+ score
+    };
+
+    // Determine which multiplier to use based on score
+    let multiplier = multipliers.upAndDown;
+    if (score >= 40) {
+      multiplier = multipliers.throwingDarts;
+    } else if (score >= 37) {
+      multiplier = multipliers.flushingIt;
+    }
+
+    return multiplier * 10; // Assuming £10 stake
+  };
+
   return (
     <TouchableOpacity
       style={[styles.outerContainer, { 
@@ -64,7 +84,7 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
           </View>
           <View style={styles.rightContent}>
             <Text style={[styles.winUpTo, { color: highlightColor }]}>WIN UP TO</Text>
-            <Text style={styles.winnings}>£{winnings}</Text>
+            <Text style={styles.winnings}>£{calculatePotentialReturn(score)}</Text>
           </View>
           <Image
             source={require('../../../assets/icons/chevron-right.png')}
@@ -89,7 +109,7 @@ export const GameEntryCard: React.FC<GameEntryCardProps> = ({
           clubName={"Placeholder Club"}
           requiredScore={score}
           stake={10}
-          potentialReturn={100}
+          potentialReturn={calculatePotentialReturn(score)}
         />
       )}
     </TouchableOpacity>

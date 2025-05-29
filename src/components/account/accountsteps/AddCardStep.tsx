@@ -64,7 +64,7 @@ const AddCardStep: React.FC<AddCardStepProps> = ({ onClose, onSubmit }) => {
     }
   };
 
-  const handleBlur = (name: keyof CardFormData) => {
+  const handleBlur = (name: keyof Omit<CardFormData, 'isDefault'>) => {
     setTouched(prev => ({ ...prev, [name]: true }));
     setIsValid(prev => ({ ...prev, [name]: validateField(name, formData[name]) }));
   };

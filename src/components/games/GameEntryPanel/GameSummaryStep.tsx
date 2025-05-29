@@ -4,41 +4,53 @@ import { scaleWidth, scaleHeight } from '../../../utils/scale';
 import { PrimaryButton } from '../../PrimaryButton';
 import { GameInfoPanel } from '../../games/GameInfoPanel';
 
+export type GameType = "upAndDown" | "flushingIt" | "throwingDarts";
+
 interface GameSummaryStepProps {
-  targetScore: 34 | 37 | 40;
+  targetScore: number; // This will be the dynamic score, e.g., 38
+  gameType: GameType; // e.g., "flushingIt"
   onNext: () => void;
   onClose?: () => void;
   handlePanelClose?: () => void;
 }
 
 const GAME_INFO = {
-  34: {
+  upAndDown: {
     label: 'Steady Eddie',
     winnings: '100',
     subtitle: 'Up & Down',
     highlightColor: '#4EDDA9',
     backgroundImage: require('../../../../assets/images/games/34-big.png'),
   },
-  37: {
+  flushingIt: {
     label: 'Sweet Spot',
     winnings: '250',
     subtitle: "Flushin' It",
     highlightColor: '#4EDD69',
     backgroundImage: require('../../../../assets/images/games/37-big.png'),
   },
-  40: {
+  throwingDarts: {
     label: 'On Fire',
     winnings: '350',
     subtitle: 'Throwing Darts',
     highlightColor: '#93DD4E',
     backgroundImage: require('../../../../assets/images/games/40-big.png'),
   },
+  default: { // Fallback for unknown game types
+    label: 'Selected Game',
+    winnings: 'N/A',
+    subtitle: 'Review Details',
+    highlightColor: '#CCC',
+    backgroundImage: require('../../../../assets/images/games/37-big.png'),
+  },
 };
 
-export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, onNext, onClose, handlePanelClose }) => {
-  const info = GAME_INFO[targetScore];
+export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, gameType, onNext, onClose, handlePanelClose }) => {
+  console.log('[GameSummaryStep] Rendering with gameType:', gameType, 'targetScore:', targetScore);
+  const info = GAME_INFO[gameType] || GAME_INFO.default;
+
   // Example values for avg and previous score
-  const avgScore = 34;
+  const avgScore = 34; // These could also be dynamic if needed
   const previousScore = 28;
   return (
     <ImageBackground
@@ -63,7 +75,7 @@ export const GameSummaryStep: React.FC<GameSummaryStepProps> = ({ targetScore, o
       <View style={styles.container}>
         <View style={styles.centeredPanel}>
           <GameInfoPanel
-            score={targetScore}
+            score={targetScore} // Display the dynamic target score
             label={info.label}
             winnings={info.winnings}
             subtitle={info.subtitle}

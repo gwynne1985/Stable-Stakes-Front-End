@@ -49,9 +49,7 @@ export const PasswordFields: React.FC<PasswordFieldsProps> = ({
 
   const handlePasswordChange = (text: string) => {
     setPassword(text);
-    if (isValidPassword && passwordsMatch) {
-      onPasswordChange(text);
-    }
+    onPasswordChange(text);
   };
 
   const handleConfirmPasswordChange = (text: string) => {

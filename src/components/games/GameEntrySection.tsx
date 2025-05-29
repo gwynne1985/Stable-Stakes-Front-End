@@ -3,20 +3,25 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { GameEntryCard } from './GameEntryCard';
 import { RulesExplainerPanel } from '../panels/RulesExplainerPanel';
+import { GameType } from './GameEntryPanel/GameSummaryStep';
 
 interface GameEntrySectionProps {
-  onGameCardPress?: (score: 34 | 37 | 40) => void;
+  onGameCardPress?: (score: number, gameType: GameType) => void;
+  targetScores: {
+    upAndDown: number;
+    flushingIt: number;
+    throwingDarts: number;
+  };
 }
 
-export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPress }) => {
+export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPress, targetScores }) => {
   const [isRulesPanelVisible, setIsRulesPanelVisible] = useState(false);
 
-  const handleCardPress = (score: 34 | 37 | 40) => {
+  const handleCardPress = (score: number, gameType: GameType) => {
     if (onGameCardPress) {
-      onGameCardPress(score);
+      onGameCardPress(score, gameType);
     } else {
-      // Default behavior (for legacy use):
-    console.log(`Selected game: ${score}+`);
+      console.log(`Selected game: ${gameType} with score: ${score}+`);
     }
   };
 
@@ -38,33 +43,33 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
       </View>
 
       <GameEntryCard
-        score={40}
+        score={targetScores.throwingDarts}
         label="On Fire"
         subtitle="Throwing Darts"
         winnings="350"
         highlightColor="#93DD4E"
-        onPress={() => handleCardPress(40)}
+        onPress={() => handleCardPress(targetScores.throwingDarts, "throwingDarts")}
         status="Enter Score"
       />
 
       <GameEntryCard
-        score={37}
+        score={targetScores.flushingIt}
         label="Sweet Spot"
         subtitle="Flushin' It"
         winnings="250"
         highlightColor="#4EDD69"
-        onPress={() => handleCardPress(37)}
+        onPress={() => handleCardPress(targetScores.flushingIt, "flushingIt")}
         isPopular={true}
         status="Enter Score"
       />
 
       <GameEntryCard
-        score={34}
+        score={targetScores.upAndDown}
         label="Steady Eddie"
         subtitle="Up & Down"
         winnings="100"
         highlightColor="#4EDDA9"
-        onPress={() => handleCardPress(34)}
+        onPress={() => handleCardPress(targetScores.upAndDown, "upAndDown")}
         status="Enter Score"
       />
 
@@ -80,35 +85,35 @@ export const GameEntrySection: React.FC<GameEntrySectionProps> = ({ onGameCardPr
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: scaleWidth(20),
-    paddingTop: scaleHeight(20),
+    width: '100%',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: scaleHeight(20),
     justifyContent: 'space-between',
     width: scaleWidth(300),
-    alignSelf: 'center',
+    marginBottom: scaleHeight(20),
   },
   title: {
+    color: '#FFF',
     fontFamily: 'Poppins',
+    fontSize: scaleWidth(22),
     fontStyle: 'italic',
     fontWeight: '900',
-    fontSize: scaleWidth(22),
-    color: '#FFFFFF',
+    lineHeight: scaleHeight(28),
+    letterSpacing: scaleWidth(-0.22),
     textTransform: 'uppercase',
-    flex: 1,
   },
   infoButton: {
-    width: scaleWidth(20),
-    height: scaleWidth(20),
+    width: scaleWidth(24),
+    height: scaleWidth(24),
     justifyContent: 'center',
     alignItems: 'center',
   },
   infoIcon: {
-    width: scaleWidth(20),
-    height: scaleWidth(20),
+    width: scaleWidth(24),
+    height: scaleWidth(24),
     resizeMode: 'contain',
   },
 }); 

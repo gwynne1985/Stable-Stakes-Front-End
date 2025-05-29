@@ -6,11 +6,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { scaleWidth, scaleHeight } from '../../utils/scale';
 import { PrimaryButton } from '../PrimaryButton';
 import { InputField } from '../InputField';
 import { SimpleSlidingPanel } from '../panels/SimpleSlidingPanel';
+import { sendVerificationCode } from '../../services/verification';
 
 interface EmailStepProps {
   email: string;
@@ -66,6 +68,20 @@ export const EmailStep: React.FC<EmailStepProps> = ({
   const shouldShowError = showValidation && email.length > 0 && !isValidEmail;
   const shouldShowValid = showValidation && email.length > 0 && isValidEmail;
 
+  const handleNext = async () => {
+    if (!isValidEmail) return;
+    
+    try {
+      await sendVerificationCode(email);
+      onNext();
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to send verification code. Please try again.'
+      );
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -115,7 +131,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
           </Text>
           <PrimaryButton
             title="Next"
-            onPress={onNext}
+            onPress={handleNext}
             isActive={isValidEmail}
             style={styles.nextButton}
           />
